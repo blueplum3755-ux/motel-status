@@ -264,16 +264,26 @@ function fetchJsonp(url) {
 
 // ── 데이터 로드 ─────────────────────────────
 async function loadData() {
-  try {
-    document.getElementById('updatedAt').textContent = '불러오는 중...';
-    const data = await fetchJsonp(API + '?action=data');
-    allRooms = data.rooms || [];
-    const t = (data.updatedAt || '').substring(5, 16);
-    document.getElementById('updatedAt').textContent = 'RMS: ' + t;
-    renderAll();
-  } catch (e) {
-    document.getElementById('updatedAt').textContent = '오류: ' + e.message;
+  document.getElementById('updatedAt').textContent = '불러오는 중...';
+  let data = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      data = await fetchJsonp(API + '?action=data');
+      break;
+    } catch (e) {
+      if (attempt === 2) {
+        document.getElementById('updatedAt').textContent = '오류: ' + e.message;
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(loadData, 60000);
+        return;
+      }
+      document.getElementById('updatedAt').textContent = '재시도 중...';
+    }
   }
+  allRooms = data.rooms || [];
+  const t = (data.updatedAt || '').substring(5, 16);
+  document.getElementById('updatedAt').textContent = 'RMS: ' + t;
+  renderAll();
   if (refreshTimer) clearTimeout(refreshTimer);
   refreshTimer = setTimeout(loadData, 60000);
 }
