@@ -41,11 +41,10 @@ body { display: flex; flex-direction: column; }
 .tab-panel { display: none; height: 100%; flex-direction: column; }
 .tab-panel.active { display: flex; }
 
-/* ── 층 탭 ── */
-.floor-tabs { flex-shrink: 0; display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
-.floor-tabs::-webkit-scrollbar { display: none; }
-.floor-tab { flex-shrink: 0; padding: 10px 22px; font-size: 14px; font-weight: 500; color: var(--text-sub); cursor: pointer; }
-.floor-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+/* ── 상태 탭 ── */
+.status-tabs { flex-shrink: 0; display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.status-tab { flex: 1; padding: 10px 6px; font-size: 13px; font-weight: 500; color: var(--text-sub); cursor: pointer; text-align: center; border-bottom: 2px solid transparent; }
+.status-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ── 객실 그리드 ── */
 .floor-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; }
@@ -158,7 +157,11 @@ body { display: flex; flex-direction: column; }
 
   <!-- 현황 탭 -->
   <div class="tab-panel active" id="tab-status">
-    <div class="floor-tabs" id="floorTabs"></div>
+    <div class="status-tabs" id="statusTabs">
+      <div class="status-tab active" data-status="occupied" onclick="selectStatusTab('occupied')">장기·재숙·입실</div>
+      <div class="status-tab" data-status="vacant" onclick="selectStatusTab('vacant')">공실</div>
+      <div class="status-tab" data-status="reserved" onclick="selectStatusTab('reserved')">예약</div>
+    </div>
     <div class="floor-content">
       <div class="room-grid" id="roomGrid">
         <div class="loading" style="grid-column:1/-1">불러오는 중...</div>
@@ -227,7 +230,7 @@ body { display: flex; flex-direction: column; }
 const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
 
 let allRooms = [];
-let currentFloor = null;
+let currentStatusTab = 'occupied';
 let selectedKind = '숙박';
 let selectedReserveRoom = null;
 let selectedCancelRoom = null;
@@ -275,7 +278,7 @@ function statusLabel(cls, r) {
 // ── 렌더링 ─────────────────────────────────
 function renderAll() {
   renderHeader();
-  renderFloorTabs();
+  renderStatusTabs();
   renderGrid();
   renderCleaning();
   renderReservations();
@@ -298,18 +301,23 @@ function renderHeader() {
   ).join('');
 }
 
-function renderFloorTabs() {
-  const floors = [...new Set(allRooms.map(r => r.floor))].sort();
-  if (!currentFloor || !floors.includes(currentFloor)) currentFloor = floors[0];
-  document.getElementById('floorTabs').innerHTML = floors.map(f =>
-    `<div class="floor-tab ${f === currentFloor ? 'active' : ''}" onclick="selectFloor('${f}')">${f}층</div>`
-  ).join('');
+function renderStatusTabs() {
+  document.querySelectorAll('.status-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.status === currentStatusTab)
+  );
 }
 
-function selectFloor(f) { currentFloor = f; renderFloorTabs(); renderGrid(); }
+function selectStatusTab(s) { currentStatusTab = s; renderStatusTabs(); renderGrid(); }
+
+function getRoomsForTab(tab) {
+  if (tab === 'occupied') return allRooms.filter(r => r.type === 'long' || r.type === 'normal' || r.checkinLabel === '재숙');
+  if (tab === 'vacant')   return allRooms.filter(r => r.type === 'empty' && r.checkinLabel !== '재숙' && !r.isReserved);
+  if (tab === 'reserved') return allRooms.filter(r => r.isReserved);
+  return allRooms;
+}
 
 function renderGrid() {
-  const rooms = allRooms.filter(r => r.floor === currentFloor);
+  const rooms = getRoomsForTab(currentStatusTab);
   if (!rooms.length) {
     document.getElementById('roomGrid').innerHTML = '<div class="loading" style="grid-column:1/-1">객실 없음</div>';
     return;
@@ -448,18 +456,4 @@ async function submitCancel() {
 // ── 모달 유틸 ──────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function closeOutside(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
-
-// ── 토스트 ─────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// ── 시작 ───────────────────────────────────
-loadData();
-</script>
-</body>
-</html>
+function closeOutside(e, id) { if (e.target === document.getElementById(id)) closeM
