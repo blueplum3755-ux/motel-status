@@ -123,9 +123,9 @@ body { display: flex; flex-direction: column; }
 </div>
 
 <div class="scroll-area" id="scrollArea">
-  <div class="section-label" id="waitLabel" style="display:none">🟠 대기중 (아직 투숙중)</div>
+  <div class="section-label" id="waitLabel" style="display:none">🔴 재실중 (방에 있음)</div>
   <div class="card-grid" id="waitGrid"></div>
-  <div class="section-label" id="readyLabel" style="display:none">🟢 체크 가능 (퇴실완료)</div>
+  <div class="section-label" id="readyLabel" style="display:none">🟢 체크 가능 (외출중 · 퇴실완료)</div>
   <div class="card-grid" id="readyGrid"></div>
 </div>
 
@@ -224,12 +224,13 @@ function trackAndRender() {
     luggageTargets.add(r.room);
   });
 
-  // 현재 투숙중인 대상 방
+  // 현재 손님이 방 안에 있는(USING) 대상 방만 대기중으로 분류
+  // OUT(외출) 상태는 대기중 아님 → 체크가능으로 전환
   const nowWaiting = new Set(
-    allRooms.filter(r => r.type === 'normal' && luggageTargets.has(r.room)).map(r => r.room)
+    allRooms.filter(r => r.type === 'normal' && r.occupied && luggageTargets.has(r.room)).map(r => r.room)
   );
 
-  // 이전에 대기중 → 지금 없음 = 퇴실 → 알림
+  // 이전에 재실 중 → 지금 없음(외출or퇴실) = 알림
   luggageWaiting.forEach(room => {
     if (!nowWaiting.has(room)) fireAlert(room);
   });
@@ -273,9 +274,11 @@ function playBeep() {
 function render() {
   const targets = [...luggageTargets];
 
-  const waiting = allRooms.filter(r => targets.includes(r.room) && r.type === 'normal')
+  // 대기중: 손님이 방 안에 있는 경우 (USING = occupied)
+  const waiting = allRooms.filter(r => targets.includes(r.room) && r.type === 'normal' && r.occupied)
     .sort((a, b) => a.room.localeCompare(b.room));
-  const ready = allRooms.filter(r => targets.includes(r.room) && r.type === 'empty')
+  // 체크가능: 퇴실(EMPTY) 또는 외출 중(OUT = !occupied, normal)
+  const ready = allRooms.filter(r => targets.includes(r.room) && (r.type === 'empty' || (r.type === 'normal' && !r.occupied)))
     .sort((a, b) => a.room.localeCompare(b.room));
 
   const doneYes  = Object.values(luggageChecked).filter(v => v === 'yes').length;
@@ -309,16 +312,17 @@ function render() {
   waitGrid.innerHTML = waiting.map(r =>
     `<div class="lug-card waiting">
       <div class="lug-room">${r.room}</div>
-      <div class="lug-status">투숙중</div>
+      <div class="lug-status">재실중</div>
     </div>`
   ).join('');
 
   readyGrid.innerHTML = ready.map(function(r) {
     const chk = luggageChecked[r.room];
     const cls = chk === 'yes' ? 'checked-yes' : chk === 'no' ? 'checked-no' : 'ready';
+    const statusLabel = r.type === 'empty' ? '퇴실완료' : '외출중';
     return `<div class="lug-card ${cls}">
       <div class="lug-room">${r.room}</div>
-      <div class="lug-status">퇴실완료</div>
+      <div class="lug-status">${statusLabel}</div>
       <div class="lug-btns">
         <button class="lug-btn yes${chk === 'yes' ? ' active' : ''}" onclick="mark('${r.room}','yes')">짐있음</button>
         <button class="lug-btn no${chk === 'no' ? ' active' : ''}" onclick="mark('${r.room}','no')">없음</button>
