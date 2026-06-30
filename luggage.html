@@ -5,160 +5,252 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>짐 체크</title>
 <style>
-:root {
-  --bg: #0f1117; --surface: #1a1d27; --surface2: #222536;
-  --border: #2d3148; --text: #e8eaf0; --text-sub: #7b80a0; --accent: #6c7aff;
-}
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); overflow: hidden; }
+html, body { height: 100%; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; color: #1a1a2e; overflow: hidden; }
 body { display: flex; flex-direction: column; }
 
 /* ── 헤더 ── */
-.header { flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-.header-left .title { font-size: 20px; font-weight: 900; }
-.header-left .date  { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
-.header-right { display: flex; align-items: center; gap: 10px; }
-.updated-at { font-size: 12px; color: var(--text-sub); }
-.refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 8px 14px; font-size: 16px; cursor: pointer; }
-
-/* ── 알림 바 ── */
-.notif-bar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #12151f; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-sub); cursor: pointer; }
-.notif-dot { width: 10px; height: 10px; border-radius: 50%; background: #3a3f60; flex-shrink: 0; }
-.notif-dot.on { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+.header {
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid #e0e4ed;
+  padding: 12px 16px 10px;
+}
+.header-row1 { display: flex; justify-content: space-between; align-items: center; }
+.h-title { font-size: 22px; font-weight: 900; color: #1a1a2e; white-space: nowrap; }
+.refresh-btn {
+  background: #f0f2f5; border: 1px solid #d0d5e8; color: #444;
+  border-radius: 10px; padding: 8px 14px; font-size: 20px; cursor: pointer;
+  flex-shrink: 0;
+}
+.header-row2 { margin-top: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.h-date { font-size: 15px; font-weight: 700; color: #333; white-space: nowrap; }
+.h-rms  { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── 요약 바 ── */
-.summary-bar { flex-shrink: 0; display: flex; border-bottom: 2px solid var(--border); }
-.summary-chip { flex: 1; text-align: center; padding: 12px 4px; border-right: 1px solid var(--border); }
-.summary-chip:last-child { border-right: none; }
-.summary-num   { font-size: 28px; font-weight: 900; line-height: 1; }
-.summary-label { font-size: 12px; color: var(--text-sub); margin-top: 4px; font-weight: 600; }
-.num-wait  { color: #fb923c; }
-.num-ready { color: #4ade80; }
-.num-done  { color: #2dd4bf; }
-.num-empty { color: #94a3b8; }
+.summary-bar {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #fff;
+  border-bottom: 2px solid #e0e4ed;
+}
+.s-chip { text-align: center; padding: 10px 4px; border-right: 1px solid #e0e4ed; }
+.s-chip:last-child { border-right: none; }
+.s-num   { font-size: 26px; font-weight: 900; line-height: 1; }
+.s-label { font-size: 11px; color: #888; margin-top: 3px; white-space: nowrap; }
+.c-occupied { color: #dc2626; }
+.c-todo     { color: #d97706; }
+.c-yes      { color: #dc2626; }
+.c-no       { color: #16a34a; }
 
-/* ── 스크롤 ── */
-.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 120px; }
+/* ── 스크롤 영역 ── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 100px;
+}
 
-/* ── 섹션 라벨 ── */
-.section-label { padding: 14px 16px 8px; font-size: 14px; font-weight: 800; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px; }
+/* ── 층 섹션 ── */
+.floor-section { padding: 0 12px 16px; }
+.floor-label {
+  font-size: 16px; font-weight: 900; color: #555;
+  padding: 14px 4px 8px;
+  white-space: nowrap;
+}
 
-/* ── 카드 그리드 (2열) ── */
-.card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 4px 12px 8px; }
+/* ── 카드 그리드 (3열) ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
 
-/* ── 카드 ── */
-.lug-card { border-radius: 16px; border: 2px solid; padding: 14px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
-.lug-card.waiting     { background: #201000; border-color: #7c3a00; }
-.lug-card.ready       { background: #001408; border-color: #1a5c35; }
-.lug-card.checked-yes { background: #002d28; border-color: #0d9488; }
-.lug-card.checked-no  { background: #181d30; border-color: #3b4270; }
+/* ── 카드 공통 ── */
+.lug-card {
+  border-radius: 14px;
+  border: 2.5px solid;
+  padding: 12px 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-height: 80px;
+  transition: transform 0.1s;
+}
+.lug-card.tappable { cursor: pointer; }
+.lug-card.tappable:active { transform: scale(0.94); }
 
-/* 방번호 */
-.lug-room { font-size: 38px; font-weight: 900; line-height: 1; }
-.lug-card.waiting     .lug-room { color: #fb923c; }
-.lug-card.ready       .lug-room { color: #4ade80; }
-.lug-card.checked-yes .lug-room { color: #2dd4bf; }
-.lug-card.checked-no  .lug-room { color: #8892c4; }
+.lug-room {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+.lug-status {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.lug-hint {
+  font-size: 10px;
+  color: #999;
+  white-space: nowrap;
+}
 
-/* 상태 텍스트 */
-.lug-status { font-size: 13px; font-weight: 700; }
-.lug-card.waiting     .lug-status { color: #fb923c; }
-.lug-card.ready       .lug-status { color: #4ade80; }
-.lug-card.checked-yes .lug-status { color: #2dd4bf; }
-.lug-card.checked-no  .lug-status { color: #7b80a0; }
+/* ── 입실중 ── */
+.card-occupied {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+.card-occupied .lug-room   { color: #dc2626; }
+.card-occupied .lug-status { color: #ef4444; }
 
-/* 선택 완료 배지 */
-.lug-done-badge { font-size: 18px; font-weight: 900; padding: 8px 0; text-align: center; border-radius: 10px; }
-.lug-card.checked-yes .lug-done-badge { background: #0d3d38; color: #2dd4bf; }
-.lug-card.checked-no  .lug-done-badge { background: #1e2340; color: #8892c4; }
+/* ── 확인필요 ── */
+.card-todo {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+.card-todo .lug-room   { color: #92400e; }
+.card-todo .lug-status { color: #d97706; }
 
-/* 버튼 그룹 */
-.lug-btns { display: flex; flex-direction: column; gap: 8px; }
-.lug-btn { width: 100%; padding: 14px 0; border-radius: 10px; border: 2px solid; font-size: 17px; font-weight: 800; cursor: pointer; background: transparent; transition: all 0.1s; letter-spacing: 0.02em; }
-.lug-btn:active { transform: scale(0.96); }
+/* ── 짐있음 ── */
+.card-yes {
+  background: #fff0f0;
+  border-color: #f87171;
+}
+.card-yes .lug-room   { color: #dc2626; }
+.card-yes .lug-status { color: #dc2626; }
+.card-yes .lug-hint   { color: #f87171; }
 
-.lug-btn.yes         { border-color: #166534; color: #4ade80; }
-.lug-btn.yes.active  { background: #052e16; border-color: #22c55e; color: #fff; }
-.lug-btn.no          { border-color: #2d3148; color: #7b80a0; }
-.lug-btn.no.active   { background: #1e2340; border-color: #4b5180; color: #e8eaf0; }
+/* ── 짐없음 ── */
+.card-no {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.card-no .lug-room   { color: #166534; }
+.card-no .lug-status { color: #16a34a; }
+.card-no .lug-hint   { color: #86efac; }
 
-/* ── 빈 상태 ── */
-.empty-state { text-align: center; padding: 48px 20px; color: var(--text-sub); font-size: 15px; line-height: 2; grid-column: 1/-1; }
+/* ── 공실 ── */
+.card-empty {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  opacity: 0.6;
+}
+.card-empty .lug-room   { color: #9ca3af; }
+.card-empty .lug-status { color: #9ca3af; }
 
 /* ── 저장 바 ── */
 .save-bar {
   flex-shrink: 0;
-  padding: 12px 14px;
-  background: var(--surface);
-  border-top: 2px solid var(--border);
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: #fff;
+  border-top: 2px solid #e0e4ed;
   display: flex;
   gap: 10px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 }
 .back-btn {
   display: flex; align-items: center; justify-content: center;
-  padding: 0 18px; height: 60px;
-  border-radius: 14px; font-size: 16px; font-weight: 700;
-  background: var(--surface2); color: var(--text-sub);
-  text-decoration: none; white-space: nowrap; border: 1px solid var(--border);
+  padding: 0 16px; min-height: 56px;
+  border-radius: 12px; font-size: 15px; font-weight: 700;
+  background: #f0f2f5; color: #555;
+  text-decoration: none; white-space: nowrap; border: 1px solid #d0d5e8;
 }
 .save-btn {
-  flex: 1; height: 60px;
-  border: none; border-radius: 14px;
+  flex: 1; min-height: 56px;
+  border: none; border-radius: 12px;
   font-size: 18px; font-weight: 900;
-  cursor: pointer; letter-spacing: 0.03em;
+  cursor: pointer; white-space: nowrap;
   transition: all 0.15s;
 }
-.save-btn:not(:disabled) { background: var(--accent); color: #fff; }
-.save-btn:disabled       { background: var(--surface2); color: #3a3f60; border: 1px solid var(--border); cursor: default; }
+.save-btn:not(:disabled) { background: #2563eb; color: #fff; }
+.save-btn:disabled       { background: #e5e7eb; color: #9ca3af; cursor: default; }
+
+/* ── 바텀 시트 모달 ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: flex-end;
+  z-index: 100;
+}
+.modal-sheet {
+  background: #fff;
+  border-radius: 22px 22px 0 0;
+  width: 100%;
+  padding: 24px 20px 32px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+}
+.modal-room {
+  text-align: center;
+  font-size: 38px; font-weight: 900; color: #1a1a2e;
+  white-space: nowrap;
+}
+.modal-sub {
+  text-align: center;
+  font-size: 15px; color: #888; margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modal-btns { display: flex; gap: 12px; margin-top: 20px; }
+.modal-btn {
+  flex: 1; min-height: 64px;
+  border-radius: 14px; border: 2.5px solid;
+  font-size: 20px; font-weight: 900;
+  cursor: pointer; background: transparent;
+  white-space: nowrap;
+}
+.modal-btn:active { transform: scale(0.96); }
+.modal-btn-yes { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+.modal-btn-no  { border-color: #86efac; color: #166534; background: #f0fdf4; }
+.modal-cancel {
+  width: 100%; min-height: 52px; margin-top: 10px;
+  border-radius: 12px; border: 1px solid #e0e4ed;
+  background: #f9fafb; color: #888; font-size: 16px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+}
 
 /* ── 토스트 ── */
-.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 14px 28px; border-radius: 24px; font-size: 16px; z-index: 200; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
+.toast {
+  position: fixed; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1a1a2e; color: #fff;
+  padding: 12px 24px; border-radius: 20px;
+  font-size: 15px; z-index: 200;
+  transition: transform 0.25s;
+  white-space: nowrap; pointer-events: none;
+}
 .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-left">
-    <div class="title">🧳 짐 체크</div>
-    <div class="date" id="headerDate"></div>
-  </div>
-  <div class="header-right">
-    <div class="updated-at" id="updatedAt">불러오는 중...</div>
+  <div class="header-row1">
+    <div class="h-title">🧳 짐 체크</div>
     <button class="refresh-btn" onclick="loadData()">↻</button>
   </div>
-</div>
-
-<div class="notif-bar" id="notifBar" onclick="toggleNotification()">
-  <div class="notif-dot" id="notifDot"></div>
-  <span id="notifLabel">탭하여 퇴실 알림 허용</span>
+  <div class="header-row2">
+    <div class="h-date" id="headerDate"></div>
+    <div class="h-rms"  id="updatedAt">불러오는 중...</div>
+  </div>
 </div>
 
 <div class="summary-bar">
-  <div class="summary-chip">
-    <div class="summary-num num-wait" id="cntWait">-</div>
-    <div class="summary-label">재실중</div>
-  </div>
-  <div class="summary-chip">
-    <div class="summary-num num-ready" id="cntReady">-</div>
-    <div class="summary-label">체크가능</div>
-  </div>
-  <div class="summary-chip">
-    <div class="summary-num num-done" id="cntDone">-</div>
-    <div class="summary-label">짐있음</div>
-  </div>
-  <div class="summary-chip">
-    <div class="summary-num num-empty" id="cntEmpty">-</div>
-    <div class="summary-label">없음</div>
-  </div>
+  <div class="s-chip"><div class="s-num c-occupied" id="cntOccupied">-</div><div class="s-label">입실중</div></div>
+  <div class="s-chip"><div class="s-num c-todo"     id="cntTodo">-</div><div class="s-label">확인필요</div></div>
+  <div class="s-chip"><div class="s-num c-yes"      id="cntYes">-</div><div class="s-label">짐있음</div></div>
+  <div class="s-chip"><div class="s-num c-no"       id="cntNo">-</div><div class="s-label">짐없음</div></div>
 </div>
 
-<div class="scroll-area" id="scrollArea">
-  <div class="section-label" id="waitLabel" style="display:none">🔴 재실중 (방에 있음)</div>
-  <div class="card-grid" id="waitGrid"></div>
-  <div class="section-label" id="readyLabel" style="display:none">🟢 체크 가능 (외출중 · 퇴실완료)</div>
-  <div class="card-grid" id="readyGrid"></div>
+<div class="scroll-area">
+  <div id="floorContainer"></div>
 </div>
 
 <div class="save-bar">
@@ -171,52 +263,53 @@ body { display: flex; flex-direction: column; }
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
 
-let allRooms = [];
-let refreshTimer = null;
+const FIXED_FLOORS = {
+  2: ['201','202','203','204','205','206','207','208','209','210','211','212','213'],
+  3: ['301','302','303','304','305','306','307','308','309','310'],
+  5: ['501','502','503','504','505','506','507','508','509','510']
+};
 
-let luggageTargets = new Set();
-let luggageWaiting = new Set();
-let luggageChecked = {};
+let allRooms   = [];
+let luggageChecked = {}; // room → 'yes' | 'no'
+let refreshTimer   = null;
 
+/* ── 세션 상태 ─────────────────────────────── */
 function initState() {
   const today = new Date().toLocaleDateString('ko-KR');
   if (sessionStorage.getItem('lugDate') === today) {
-    luggageTargets = new Set(JSON.parse(sessionStorage.getItem('lugTargets') || '[]'));
-    luggageWaiting = new Set(JSON.parse(sessionStorage.getItem('lugWaiting') || '[]'));
     luggageChecked = JSON.parse(sessionStorage.getItem('lugChecked') || '{}');
   } else {
-    luggageTargets = new Set();
-    luggageWaiting = new Set();
     luggageChecked = {};
     sessionStorage.setItem('lugDate', today);
   }
   document.getElementById('headerDate').textContent =
-    new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+    new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
 }
 
 function saveState() {
-  const today = new Date().toLocaleDateString('ko-KR');
-  sessionStorage.setItem('lugDate', today);
-  sessionStorage.setItem('lugTargets', JSON.stringify([...luggageTargets]));
-  sessionStorage.setItem('lugWaiting', JSON.stringify([...luggageWaiting]));
+  sessionStorage.setItem('lugDate', new Date().toLocaleDateString('ko-KR'));
   sessionStorage.setItem('lugChecked', JSON.stringify(luggageChecked));
 }
 
-// ── JSONP ─────────────────────────────────────
+/* ── JSONP ─────────────────────────────────── */
 function fetchJsonp(url) {
   return new Promise(function(resolve, reject) {
     const cb = 'cb_' + Date.now();
     const script = document.createElement('script');
     const timer = setTimeout(function() { cleanup(); reject(new Error('timeout')); }, 12000);
     window[cb] = function(data) { cleanup(); resolve(data); };
-    function cleanup() { clearTimeout(timer); delete window[cb]; if (script.parentNode) script.parentNode.removeChild(script); }
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
     script.onerror = function() { cleanup(); reject(new Error('network error')); };
     script.src = url + '&callback=' + cb;
     document.body.appendChild(script);
   });
 }
 
-// ── 데이터 로드 ───────────────────────────────
+/* ── 데이터 로드 ────────────────────────────── */
 async function loadData() {
   document.getElementById('updatedAt').textContent = '불러오는 중...';
   let data = null;
@@ -224,7 +317,7 @@ async function loadData() {
     try {
       data = await fetchJsonp(API + '?action=data');
       break;
-    } catch (e) {
+    } catch(e) {
       if (attempt === 2) {
         document.getElementById('updatedAt').textContent = '오류: ' + e.message;
         if (refreshTimer) clearTimeout(refreshTimer);
@@ -237,142 +330,153 @@ async function loadData() {
   allRooms = data.rooms || [];
   const t = (data.updatedAt || '').replace(/^.*?(\d+월\d+일).*?(\d+시\d+분).*$/, '$1 $2');
   document.getElementById('updatedAt').textContent = 'RMS: ' + (t || (data.updatedAt||'').substring(5,16));
-  trackAndRender();
+  render();
   if (refreshTimer) clearTimeout(refreshTimer);
   refreshTimer = setTimeout(loadData, 60000);
 }
 
-// ── 추적 ──────────────────────────────────────
-function trackAndRender() {
-  allRooms.filter(r => r.checkinLabel === '어제입실').forEach(r => {
-    luggageTargets.add(r.room);
-  });
-
-  // 손님이 방 안에 있는(USING=occupied) 방만 재실중
-  const nowWaiting = new Set(
-    allRooms.filter(r => r.type === 'normal' && r.occupied && luggageTargets.has(r.room)).map(r => r.room)
-  );
-
-  // 재실 → 외출/퇴실 전환 시 알림
-  luggageWaiting.forEach(room => {
-    if (!nowWaiting.has(room)) fireAlert(room);
-  });
-
-  luggageWaiting = nowWaiting;
-  saveState();
-  render();
+/* ── 객실 상태 판별 ─────────────────────────── */
+// 반환값: 'occupied' | 'todo' | 'empty'
+function getRoomLiveState(roomNum) {
+  const r = allRooms.find(function(x) { return x.room === roomNum; });
+  if (!r) return 'empty';
+  if (r.type === 'normal' && r.occupied) return 'occupied';  // 입실중
+  if (r.type === 'empty' || (r.type === 'normal' && !r.occupied)) return 'todo'; // 퇴실/외출
+  return 'empty';
 }
 
-function fireAlert(room) {
-  playBeep();
-  if (Notification.permission === 'granted') {
-    new Notification('🛎 짐체크 필요', { body: room + '호 외출/퇴실 — 짐 확인해주세요', requireInteraction: true });
-  }
-  showToast('🔔 ' + room + '호 — 짐체크 필요!');
+/* 정렬 우선순위: 입실중(0) → 확인필요(1) → 체크완료(2) → 공실(3) */
+function sortPriority(roomNum) {
+  const chk  = luggageChecked[roomNum];
+  const live = getRoomLiveState(roomNum);
+  if (live === 'occupied') return 0;
+  if (live === 'todo' && !chk) return 1;
+  if (chk) return 2;
+  return 3;
 }
 
-function playBeep() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 220, 440].forEach(function(delay) {
-      const osc = ctx.createOscillator(), gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = 880; osc.type = 'sine';
-      const t = ctx.currentTime + delay / 1000;
-      gain.gain.setValueAtTime(0.4, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-      osc.start(t); osc.stop(t + 0.4);
-    });
-  } catch(e) {}
-}
-
-// ── 렌더 ──────────────────────────────────────
+/* ── 렌더 ───────────────────────────────────── */
 function render() {
-  const targets = [...luggageTargets];
+  let cntOccupied = 0, cntTodo = 0, cntYes = 0, cntNo = 0;
 
-  // 재실중: 키 있는(occupied) 일반 객실
-  const waiting = allRooms.filter(r => targets.includes(r.room) && r.type === 'normal' && r.occupied)
-    .sort((a,b) => a.room.localeCompare(b.room));
-  // 체크가능: 퇴실(empty) 또는 외출중(!occupied, normal)
-  const ready = allRooms.filter(r => targets.includes(r.room) && (r.type === 'empty' || (r.type === 'normal' && !r.occupied)))
-    .sort((a,b) => a.room.localeCompare(b.room));
+  const html = Object.entries(FIXED_FLOORS).map(function(entry) {
+    const floor = entry[0];
+    const rooms = entry[1];
 
-  const doneYes = Object.values(luggageChecked).filter(v => v === 'yes').length;
-  const doneNo  = Object.values(luggageChecked).filter(v => v === 'no').length;
+    const sorted = rooms.slice().sort(function(a, b) {
+      const pa = sortPriority(a), pb = sortPriority(b);
+      if (pa !== pb) return pa - pb;
+      return a.localeCompare(b);
+    });
 
-  document.getElementById('cntWait').textContent  = waiting.length;
-  document.getElementById('cntReady').textContent = ready.filter(r => !luggageChecked[r.room]).length;
-  document.getElementById('cntDone').textContent  = doneYes;
-  document.getElementById('cntEmpty').textContent = doneNo;
+    const cards = sorted.map(function(roomNum) {
+      const live = getRoomLiveState(roomNum);
+      const chk  = luggageChecked[roomNum];
 
-  const waitLabel  = document.getElementById('waitLabel');
-  const readyLabel = document.getElementById('readyLabel');
-  const waitGrid   = document.getElementById('waitGrid');
-  const readyGrid  = document.getElementById('readyGrid');
+      /* 입실중 — 터치 불가 */
+      if (live === 'occupied') {
+        cntOccupied++;
+        return `<div class="lug-card card-occupied">
+          <div class="lug-room">${roomNum}</div>
+          <div class="lug-status">🔴 입실중</div>
+        </div>`;
+      }
 
-  if (targets.length === 0) {
-    waitLabel.style.display = readyLabel.style.display = 'none';
-    waitGrid.innerHTML = '';
-    readyGrid.innerHTML = `<div class="empty-state">
-      어제 입실 객실이 없습니다<br>
-      <span style="font-size:13px;color:#4b5180">데이터 갱신 후 자동 표시됩니다</span>
+      /* 짐있음 — 탭으로 취소 */
+      if (chk === 'yes') {
+        cntYes++;
+        return `<div class="lug-card card-yes tappable" onclick="mark('${roomNum}',null)">
+          <div class="lug-room">${roomNum}</div>
+          <div class="lug-status">✅ 짐있음</div>
+          <div class="lug-hint">탭 → 취소</div>
+        </div>`;
+      }
+
+      /* 짐없음 — 탭으로 취소 */
+      if (chk === 'no') {
+        cntNo++;
+        return `<div class="lug-card card-no tappable" onclick="mark('${roomNum}',null)">
+          <div class="lug-room">${roomNum}</div>
+          <div class="lug-status">✔ 짐없음</div>
+          <div class="lug-hint">탭 → 취소</div>
+        </div>`;
+      }
+
+      /* 확인필요 — 터치 가능 */
+      if (live === 'todo') {
+        cntTodo++;
+        return `<div class="lug-card card-todo tappable" onclick="openModal('${roomNum}')">
+          <div class="lug-room">${roomNum}</div>
+          <div class="lug-status">❗확인필요</div>
+        </div>`;
+      }
+
+      /* 공실 */
+      return `<div class="lug-card card-empty">
+        <div class="lug-room">${roomNum}</div>
+        <div class="lug-status">공실</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="floor-section">
+      <div class="floor-label">${floor}층</div>
+      <div class="card-grid">${cards}</div>
     </div>`;
-    updateSaveBtn(0);
-    return;
-  }
-
-  waitLabel.style.display  = waiting.length ? '' : 'none';
-  readyLabel.style.display = ready.length   ? '' : 'none';
-
-  // 재실중 카드 (버튼 없음)
-  waitGrid.innerHTML = waiting.map(r => `
-    <div class="lug-card waiting">
-      <div class="lug-room">${r.room}</div>
-      <div class="lug-status">🔴 재실중</div>
-    </div>
-  `).join('');
-
-  // 체크가능 카드
-  readyGrid.innerHTML = ready.map(function(r) {
-    const chk = luggageChecked[r.room];
-    const statusLabel = r.type === 'empty' ? '🟢 퇴실완료' : '🟡 외출중';
-
-    if (chk) {
-      // 이미 체크됨 → 배지 + 다시탭해제 버튼
-      const badgeText = chk === 'yes' ? '✅ 짐 있음' : '☑️ 없음 확인';
-      const cls = chk === 'yes' ? 'checked-yes' : 'checked-no';
-      return `<div class="lug-card ${cls}">
-        <div class="lug-room">${r.room}</div>
-        <div class="lug-status">${statusLabel}</div>
-        <div class="lug-done-badge">${badgeText}</div>
-        <button class="lug-btn no" style="font-size:14px;padding:10px 0" onclick="mark('${r.room}',null)">↩ 취소</button>
-      </div>`;
-    } else {
-      return `<div class="lug-card ready">
-        <div class="lug-room">${r.room}</div>
-        <div class="lug-status">${statusLabel}</div>
-        <div class="lug-btns">
-          <button class="lug-btn yes" onclick="mark('${r.room}','yes')">✅ 짐 있음</button>
-          <button class="lug-btn no"  onclick="mark('${r.room}','no')">❌ 없 음</button>
-        </div>
-      </div>`;
-    }
   }).join('');
 
-  updateSaveBtn(doneYes + doneNo);
-  renderNotifBar();
+  document.getElementById('floorContainer').innerHTML = html;
+
+  document.getElementById('cntOccupied').textContent = cntOccupied;
+  document.getElementById('cntTodo').textContent      = cntTodo;
+  document.getElementById('cntYes').textContent       = cntYes;
+  document.getElementById('cntNo').textContent        = cntNo;
+
+  updateSaveBtn(cntYes + cntNo);
 }
 
-function mark(room, val) {
+/* ── 체크 모달 ──────────────────────────────── */
+function openModal(roomNum) {
+  const existing = document.getElementById('lugModal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'lugModal';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-sheet">
+      <div class="modal-room">${roomNum}호</div>
+      <div class="modal-sub">짐 체크 결과를 선택하세요</div>
+      <div class="modal-btns">
+        <button class="modal-btn modal-btn-yes" onclick="mark('${roomNum}','yes')">✅ 짐 있음</button>
+        <button class="modal-btn modal-btn-no"  onclick="mark('${roomNum}','no')">✔ 없 음</button>
+      </div>
+      <button class="modal-cancel" onclick="closeModal()">취소</button>
+    </div>
+  `;
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal();
+  });
+  document.body.appendChild(overlay);
+}
+
+function closeModal() {
+  const m = document.getElementById('lugModal');
+  if (m) m.remove();
+}
+
+/* ── 체크 기록 ──────────────────────────────── */
+function mark(roomNum, val) {
+  closeModal();
   if (val === null) {
-    delete luggageChecked[room];
+    delete luggageChecked[roomNum];
   } else {
-    luggageChecked[room] = val;
+    luggageChecked[roomNum] = val;
   }
   saveState();
   render();
 }
 
+/* ── 저장 버튼 ──────────────────────────────── */
 function updateSaveBtn(count) {
   const btn = document.getElementById('saveBtn');
   if (count > 0) {
@@ -384,44 +488,14 @@ function updateSaveBtn(count) {
   }
 }
 
-// ── 알림 ──────────────────────────────────────
-async function toggleNotification() {
-  const perm = Notification.permission;
-  if (perm === 'granted') {
-    showToast('알림이 이미 허용되어 있습니다 ✓');
-  } else if (perm === 'denied') {
-    showToast('브라우저 설정에서 알림을 허용해주세요');
-  } else {
-    await Notification.requestPermission();
-    renderNotifBar();
-    if (Notification.permission === 'granted') showToast('알림 허용됨 ✓');
-  }
-}
-
-function renderNotifBar() {
-  const dot = document.getElementById('notifDot');
-  const label = document.getElementById('notifLabel');
-  const perm = Notification.permission;
-  if (perm === 'granted') {
-    dot.className = 'notif-dot on';
-    label.textContent = '알림 허용됨 — 외출/퇴실 감지 시 자동 알림';
-  } else if (perm === 'denied') {
-    dot.className = 'notif-dot';
-    label.textContent = '알림 차단됨 — 브라우저 설정에서 허용 필요';
-  } else {
-    dot.className = 'notif-dot';
-    label.textContent = '탭하여 퇴실 알림 허용';
-  }
-}
-
-// ── 저장 ──────────────────────────────────────
 async function saveResults() {
   const entries = Object.entries(luggageChecked);
   if (!entries.length) { showToast('체크된 항목이 없습니다'); return; }
   const date    = new Date().toLocaleDateString('ko-KR');
   const results = entries.map(function(e) { return e[0] + '=' + e[1]; }).join(',');
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true; btn.textContent = '저장 중...';
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
   try {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
@@ -437,7 +511,7 @@ async function saveResults() {
   }
 }
 
-// ── 토스트 ────────────────────────────────────
+/* ── 토스트 ─────────────────────────────────── */
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -445,9 +519,8 @@ function showToast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
-// ── 초기화 ────────────────────────────────────
+/* ── 초기화 ─────────────────────────────────── */
 initState();
-renderNotifBar();
 loadData();
 </script>
 </body>
