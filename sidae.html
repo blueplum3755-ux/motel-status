@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>식대 장부</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #222536;
+  --border: #2d3148;
+  --text: #e8eaf0;
+  --text-sub: #7b80a0;
+  --accent: #6c7aff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+/* ── 헤더 ── */
+.header { flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 14px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; }
+.back-link { font-size: 12px; color: var(--text-sub); text-decoration: none; }
+.header-title { font-size: 17px; font-weight: 800; }
+.month-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; }
+.month-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 5px 12px; font-size: 15px; cursor: pointer; }
+.month-label { font-size: 15px; font-weight: 700; min-width: 96px; text-align: center; }
+
+/* ── 탭 바 ── */
+.tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 2px solid var(--border); }
+.tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 14px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 3px solid transparent; }
+.tab-btn.active { color: #fff; border-bottom-color: var(--accent); }
+
+/* ── 컨텐츠 ── */
+.content { flex: 1; overflow: hidden; }
+.tab-panel { display: none; height: 100%; flex-direction: column; }
+.tab-panel.active { display: flex; }
+.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+
+/* ── 입력 폼 ── */
+.form-group { margin-bottom: 13px; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.05em; display: block; margin-bottom: 5px; }
+.form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px 12px; font-size: 15px; outline: none; -webkit-appearance: none; }
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-sub); }
+.meal-toggle { display: flex; gap: 8px; }
+.meal-btn { flex: 1; padding: 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text-sub); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; }
+.meal-btn.active.jo  { border-color: #4ade80; background: #0d2b1a; color: #4ade80; }
+.meal-btn.active.ju  { border-color: #fde047; background: #1f1a00; color: #fde047; }
+.meal-btn.active.suk { border-color: #c4b5fd; background: #1a0d2e; color: #c4b5fd; }
+.amount-wrap { display: flex; gap: 8px; align-items: center; }
+.amount-unit { color: var(--text-sub); font-size: 14px; white-space: nowrap; }
+.save-btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+
+/* ── 장부 ── */
+.ledger-header { padding: 10px 14px 0; flex-shrink: 0; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.filter-select { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 14px; }
+.total-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.total-label { font-size: 12px; color: var(--text-sub); }
+.total-amount { font-size: 20px; font-weight: 800; color: #4ade80; }
+.meal-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.meal-table th { padding: 7px 5px; text-align: left; font-size: 10px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+.meal-table td { padding: 9px 5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.meal-table tr:last-child td { border-bottom: none; }
+.vendor-cell { font-weight: 600; font-size: 13px; }
+.item-cell { color: var(--text-sub); font-size: 11px; }
+.meal-tag { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.tag-조 { background: #0d2b1a; color: #4ade80; }
+.tag-중 { background: #1f1a00; color: #fde047; }
+.tag-석 { background: #1a0d2e; color: #c4b5fd; }
+.num-right { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cumul-col { color: #60a5fa; font-size: 11px; text-align: right; white-space: nowrap; }
+.del-btn { background: none; border: none; color: #3a3f60; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+.del-btn:active { color: #f87171; }
+
+/* ── 정산 ── */
+.vendor-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+.vendor-name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.vendor-name { font-size: 16px; font-weight: 700; }
+.vendor-count { font-size: 12px; color: var(--text-sub); }
+.vendor-total { font-size: 22px; font-weight: 800; color: #4ade80; margin-bottom: 10px; }
+.vendor-meal-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.meal-stat { flex: 1; background: var(--surface2); border-radius: 8px; padding: 7px 8px; text-align: center; }
+.meal-stat-num { font-size: 15px; font-weight: 700; }
+.meal-stat-label { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+.print-btn { width: 100%; padding: 10px; border: 1px solid var(--accent); border-radius: 8px; background: transparent; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+.excel-btn-wrap { margin-bottom: 14px; }
+.excel-btn { width: 100%; padding: 14px; border: 1px solid #1a5c35; border-radius: 10px; background: #001a0a; color: #4ade80; font-size: 15px; font-weight: 700; cursor: pointer; }
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-sub); font-size: 13px; line-height: 1.8; }
+
+/* ── 거래명세서 (인쇄용) ── */
+#printArea { display: none; position: fixed; inset: 0; background: #fff; color: #000; z-index: 999; overflow: auto; padding: 24px; font-family: 'Malgun Gothic', sans-serif; }
+.print-close { position: fixed; top: 12px; right: 12px; background: #333; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
+.print-action-btn { display: inline-block; margin-right: 8px; margin-bottom: 12px; background: #1a1d27; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; }
+.명세서-title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 6px; }
+.명세서-sub { text-align: center; font-size: 13px; color: #555; margin-bottom: 16px; }
+.명세서-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.명세서-table th, .명세서-table td { border: 1px solid #bbb; padding: 6px 8px; }
+.명세서-table th { background: #f5f5f5; font-weight: bold; text-align: center; }
+.명세서-table td { text-align: center; }
+.명세서-table td.left { text-align: left; }
+.명세서-table td.right { text-align: right; }
+.명세서-total { text-align: right; margin-top: 12px; font-size: 15px; font-weight: bold; }
+@media print { .print-close, .print-action-btn { display: none !important; } }
+
+/* ── 토스트 ── */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 300; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-row">
+    <a class="back-link" href="index.html">← 현황</a>
+    <div class="header-title">🍱 식대 장부</div>
+    <div style="width:44px"></div>
+  </div>
+  <div class="month-nav">
+    <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+    <div class="month-label" id="monthLabel"></div>
+    <button class="month-btn" onclick="changeMonth(1)">▶</button>
+  </div>
+</div>
+
+<!-- 탭 바 -->
+<div class="tab-bar">
+  <div class="tab-btn active" data-tab="input"  onclick="switchTab('input')">입력</div>
+  <div class="tab-btn"        data-tab="ledger" onclick="switchTab('ledger')">장부</div>
+  <div class="tab-btn"        data-tab="settle" onclick="switchTab('settle')">정산</div>
+</div>
+
+<div class="content">
+
+  <!-- 입력 탭 -->
+  <div class="tab-panel active" id="tab-input">
+    <div class="scroll-area">
+
+      <div class="form-group">
+        <label class="form-label">날짜</label>
+        <input class="form-input" type="date" id="inputDate">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">업체명</label>
+        <input class="form-input" type="text" id="inputVendor" list="vendorList" placeholder="업체명 입력 또는 선택">
+        <datalist id="vendorList"></datalist>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">식사 구분</label>
+        <div class="meal-toggle">
+          <div class="meal-btn active jo"  data-meal="조식" onclick="selectMeal(this)">조식</div>
+          <div class="meal-btn ju"  data-meal="중식" onclick="selectMeal(this)">중식</div>
+          <div class="meal-btn suk" data-meal="석식" onclick="selectMeal(this)">석식</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">품목</label>
+        <input class="form-input" type="text" id="inputItem" placeholder="예: 설렁탕 2인">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">금액</label>
+        <div class="amount-wrap">
+          <input class="form-input" type="number" id="inputAmount" placeholder="0" inputmode="numeric" style="flex:1">
+          <span class="amount-unit">원</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">사인</label>
+        <input class="form-input" type="text" id="inputSign" placeholder="담당자 이름 또는 이니셜">
+      </div>
+
+      <button class="save-btn" onclick="addRecord()">저장</button>
+
+    </div>
+  </div>
+
+  <!-- 장부 탭 -->
+  <div class="tab-panel" id="tab-ledger">
+    <div class="ledger-header">
+      <div class="filter-row">
+        <select class="filter-select" id="vendorFilter" onchange="renderLedger()">
+          <option value="">전체 업체</option>
+        </select>
+      </div>
+      <div class="total-bar">
+        <div class="total-label" id="totalLabel">합계</div>
+        <div class="total-amount" id="totalAmount">-</div>
+      </div>
+    </div>
+    <div class="scroll-area" style="padding-top:4px">
+      <table class="meal-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>구분</th>
+            <th>업체 / 품목</th>
+            <th class="num-right">금액</th>
+            <th class="cumul-col">누계</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+      <div id="ledgerEmpty" class="empty-state" style="display:none">이번달 기록이 없습니다</div>
+    </div>
+  </div>
+
+  <!-- 정산 탭 -->
+  <div class="tab-panel" id="tab-settle">
+    <div class="scroll-area">
+      <div class="excel-btn-wrap">
+        <button class="excel-btn" onclick="downloadExcel()">📥 전체 엑셀 다운로드</button>
+      </div>
+      <div id="vendorSummary"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 거래명세서 인쇄 영역 -->
+<div id="printArea">
+  <button class="print-close" onclick="closePrint()">✕ 닫기</button>
+  <button class="print-action-btn" onclick="window.print()">🖨 인쇄</button>
+  <div id="printContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
+
+let records = [];
+let currentMonth = new Date();
+currentMonth.setDate(1);
+let selectedMeal = '조식';
+
+// ── 초기화 ──────────────────────────────────
+function init() {
+  document.getElementById('inputDate').value = toDateStr(new Date());
+  const lastSign = localStorage.getItem('sidae_lastSign') || '';
+  document.getElementById('inputSign').value = lastSign;
+  renderMonthLabel();
+  updateVendorDatalist();
+  loadData();
+}
+
+function toDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+function getMonthStr() {
+  const y = currentMonth.getFullYear();
+  const m = String(currentMonth.getMonth() + 1).padStart(2, '0');
+  return y + '-' + m;
+}
+
+function getMonthDisplay() {
+  return currentMonth.getFullYear() + '년 ' + (currentMonth.getMonth() + 1) + '월';
+}
+
+// ── 월 이동 ──────────────────────────────────
+function changeMonth(dir) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + dir, 1);
+  renderMonthLabel();
+  loadData();
+}
+
+function renderMonthLabel() {
+  document.getElementById('monthLabel').textContent = getMonthDisplay();
+}
+
+// ── JSONP ───────────────────────────────────
+function fetchJsonp(url) {
+  return new Promise(function(resolve, reject) {
+    const cb = 'cb_' + Date.now();
+    const script = document.createElement('script');
+    const timer = setTimeout(function() { cleanup(); reject(new Error('timeout')); }, 14000);
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    function cleanup() { clearTimeout(timer); delete window[cb]; if (script.parentNode) script.parentNode.removeChild(script); }
+    script.onerror = function() { cleanup(); reject(new Error('network error')); };
+    script.src = url + '&callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
+// ── 데이터 로드 ──────────────────────────────
+async function loadData() {
+  try {
+    const data = await fetchJsonp(API + '?action=meal_list&month=' + getMonthStr());
+    records = data.records || [];
+    renderAll();
+  } catch(e) {
+    showToast('로드 실패: ' + e.message);
+  }
+}
+
+function renderAll() {
+  updateVendorDatalist();
+  renderLedger();
+  renderSettle();
+}
+
+// ── 업체 목록 ────────────────────────────────
+function getSavedVendors() {
+  const saved = JSON.parse(localStorage.getItem('sidae_vendors') || '[]');
+  const fromRec = records.map(function(r) { return r.vendor; }).filter(Boolean);
+  return [...new Set([...saved, ...fromRec])].sort();
+}
+
+function saveVendor(name) {
+  const vendors = JSON.parse(localStorage.getItem('sidae_vendors') || '[]');
+  if (!vendors.includes(name)) {
+    vendors.push(name);
+    localStorage.setItem('sidae_vendors', JSON.stringify(vendors));
+  }
+}
+
+function updateVendorDatalist() {
+  const vendors = getSavedVendors();
+  document.getElementById('vendorList').innerHTML =
+    vendors.map(function(v) { return '<option value="' + v + '">'; }).join('');
+
+  const sel = document.getElementById('vendorFilter');
+  const cur = sel.value;
+  const recordVendors = [...new Set(records.map(function(r){ return r.vendor; }).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">전체 업체</option>' +
+    recordVendors.map(function(v) {
+      return '<option value="' + v + '"' + (v === cur ? ' selected' : '') + '>' + v + '</option>';
+    }).join('');
+}
+
+// ── 식사 선택 ────────────────────────────────
+function selectMeal(el) {
+  document.querySelectorAll('.meal-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  el.classList.add('active');
+  selectedMeal = el.dataset.meal;
+}
+
+// ── 입력 저장 ────────────────────────────────
+async function addRecord() {
+  const date   = document.getElementById('inputDate').value;
+  const vendor = document.getElementById('inputVendor').value.trim();
+  const item   = document.getElementById('inputItem').value.trim();
+  const amount = parseInt(document.getElementById('inputAmount').value, 10) || 0;
+  const sign   = document.getElementById('inputSign').value.trim();
+
+  if (!date)   { showToast('날짜를 입력해주세요'); return; }
+  if (!vendor) { showToast('업체명을 입력해주세요'); return; }
+  if (!amount) { showToast('금액을 입력해주세요'); return; }
+
+  saveVendor(vendor);
+  if (sign) localStorage.setItem('sidae_lastSign', sign);
+
+  const btn = document.querySelector('.save-btn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  try {
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=meal_add'
+        + '&date='     + encodeURIComponent(date)
+        + '&vendor='   + encodeURIComponent(vendor)
+        + '&mealType=' + encodeURIComponent(selectedMeal)
+        + '&item='     + encodeURIComponent(item)
+        + '&amount='   + amount
+        + '&sign='     + encodeURIComponent(sign)
+    });
+    showToast('저장 완료 ✓');
+    document.getElementById('inputItem').value   = '';
+    document.getElementById('inputAmount').value = '';
+    // Apps Script 저장 후 1.5초 대기 후 재로드
+    setTimeout(loadData, 1500);
+  } catch(e) {
+    showToast('저장 오류 — 잠시 후 다시 시도해주세요');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '저장';
+  }
+}
+
+// ── 장부 렌더 ────────────────────────────────
+function renderLedger() {
+  const filterVendor = document.getElementById('vendorFilter').value;
+  let filtered = filterVendor
+    ? records.filter(function(r) { return r.vendor === filterVendor; })
+    : records.slice();
+
+  filtered.sort(function(a, b) {
+    return a.date.localeCompare(b.date) || (a.id - b.id);
+  });
+
+  const total = filtered.reduce(function(s, r) { return s + r.amount; }, 0);
+  document.getElementById('totalLabel').textContent =
+    filterVendor ? filterVendor + ' 합계' : getMonthDisplay() + ' 합계';
+  document.getElementById('totalAmount').textContent = fmt(total) + '원';
+
+  const body  = document.getElementById('ledgerBody');
+  const empty = document.getElementById('ledgerEmpty');
+
+  if (!filtered.length) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // 누계: 업체별 별도 카운터
+  const cumulMap = {};
+  const rows = filtered.map(function(r) {
+    cumulMap[r.vendor] = (cumulMap[r.vendor] || 0) + r.amount;
+    return Object.assign({}, r, { cumul: cumulMap[r.vendor] });
+  });
+
+  const tagCls = { 조식: 'tag-조', 중식: 'tag-중', 석식: 'tag-석' };
+
+  body.innerHTML = rows.map(function(r) {
+    return '<tr>'
+      + '<td style="white-space:nowrap;font-size:11px">' + r.date.slice(5) + '</td>'
+      + '<td><span class="meal-tag ' + (tagCls[r.mealType] || '') + '">'
+        + (r.mealType ? r.mealType[0] : '-') + '</span></td>'
+      + '<td><div class="vendor-cell">' + r.vendor + '</div>'
+        + '<div class="item-cell">' + (r.item || '') + '</div></td>'
+      + '<td class="num-right">' + fmt(r.amount) + '</td>'
+      + '<td class="cumul-col">' + fmt(r.cumul) + '</td>'
+      + '<td><button class="del-btn" onclick="deleteRecord(' + r.id + ')">×</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ── 정산 렌더 ────────────────────────────────
+function renderSettle() {
+  const vendors = [...new Set(records.map(function(r) { return r.vendor; }).filter(Boolean))].sort();
+  const container = document.getElementById('vendorSummary');
+
+  if (!vendors.length) {
+    container.innerHTML = '<div class="empty-state">이번달 기록이 없습니다</div>';
+    return;
+  }
+
+  container.innerHTML = vendors.map(function(v) {
+    const vRecs = records.filter(function(r) { return r.vendor === v; });
+    const total = vRecs.reduce(function(s, r) { return s + r.amount; }, 0);
+    const cnt조 = vRecs.filter(function(r) { return r.mealType === '조식'; }).length;
+    const cnt중 = vRecs.filter(function(r) { return r.mealType === '중식'; }).length;
+    const cnt석 = vRecs.filter(function(r) { return r.mealType === '석식'; }).length;
+    return '<div class="vendor-card">'
+      + '<div class="vendor-name-row">'
+      + '<div class="vendor-name">' + v + '</div>'
+      + '<div class="vendor-count">' + vRecs.length + '건</div>'
+      + '</div>'
+      + '<div class="vendor-total">' + fmt(total) + '원</div>'
+      + '<div class="vendor-meal-row">'
+      + '<div class="meal-stat"><div class="meal-stat-num" style="color:#4ade80">' + cnt조 + '</div><div class="meal-stat-label">조식</div></div>'
+      + '<div class="meal-stat"><div class="meal-stat-num" style="color:#fde047">' + cnt중 + '</div><div class="meal-stat-label">중식</div></div>'
+      + '<div class="meal-stat"><div class="meal-stat-num" style="color:#c4b5fd">' + cnt석 + '</div><div class="meal-stat-label">석식</div></div>'
+      + '</div>'
+      + '<button class="print-btn" onclick="printVendor(\'' + v.replace(/'/g, "\\'") + '\')">🖨 거래명세서 출력</button>'
+      + '</div>';
+  }).join('');
+}
+
+// ── 삭제 ─────────────────────────────────────
+async function deleteRecord(rowId) {
+  if (!confirm('이 항목을 삭제할까요?')) return;
+  try {
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=meal_delete&rowId=' + rowId
+    });
+    showToast('삭제 완료');
+    setTimeout(loadData, 1200);
+  } catch(e) {
+    showToast('삭제 오류');
+  }
+}
+
+// ── 거래명세서 출력 ──────────────────────────
+function printVendor(vendor) {
+  const vRecs = records.filter(function(r) { return r.vendor === vendor; })
+    .sort(function(a, b) { return a.date.localeCompare(b.date) || (a.id - b.id); });
+  const total = vRecs.reduce(function(s, r) { return s + r.amount; }, 0);
+  let cumul = 0;
+  const rows = vRecs.map(function(r) {
+    cumul += r.amount;
+    return '<tr>'
+      + '<td>' + r.date + '</td>'
+      + '<td>' + (r.mealType || '') + '</td>'
+      + '<td class="left">' + (r.item || '') + '</td>'
+      + '<td class="right">' + fmt(r.amount) + '</td>'
+      + '<td class="right">' + fmt(cumul) + '</td>'
+      + '<td>' + (r.sign || '') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('printContent').innerHTML =
+    '<div class="명세서-title">거 래 명 세 서</div>'
+    + '<div class="명세서-sub">공급받는자: ' + vendor + '&nbsp;&nbsp;|&nbsp;&nbsp;기간: ' + getMonthDisplay() + '</div>'
+    + '<table class="명세서-table">'
+    + '<thead><tr><th>날짜</th><th>구분</th><th>품목</th><th>금액</th><th>누계금액</th><th>사인</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>'
+    + '<div class="명세서-total">합계: ' + fmt(total) + '원</div>';
+
+  document.getElementById('printArea').style.display = 'block';
+}
+
+function closePrint() {
+  document.getElementById('printArea').style.display = 'none';
+}
+
+// ── 엑셀 다운로드 ────────────────────────────
+function downloadExcel() {
+  if (!records.length) { showToast('데이터가 없습니다'); return; }
+  const wb = XLSX.utils.book_new();
+  const vendors = [...new Set(records.map(function(r) { return r.vendor; }).filter(Boolean))].sort();
+
+  vendors.forEach(function(v) {
+    const vRecs = records.filter(function(r) { return r.vendor === v; })
+      .sort(function(a, b) { return a.date.localeCompare(b.date) || (a.id - b.id); });
+    let cumul = 0;
+    const rows = [['날짜', '식사구분', '품목', '금액', '누계금액', '사인']];
+    vRecs.forEach(function(r) {
+      cumul += r.amount;
+      rows.push([r.date, r.mealType || '', r.item || '', r.amount, cumul, r.sign || '']);
+    });
+    const vTotal = vRecs.reduce(function(s, r) { return s + r.amount; }, 0);
+    rows.push(['', '', '합 계', vTotal, '', '']);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:13},{wch:8},{wch:22},{wch:11},{wch:13},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, v.slice(0, 31));
+  });
+
+  XLSX.writeFile(wb, '식대장부_' + getMonthStr() + '.xlsx');
+  showToast('엑셀 다운로드 완료');
+}
+
+// ── 유틸 ─────────────────────────────────────
+function fmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.remove('active');
+  });
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+init();
+</script>
+</body>
+</html>
