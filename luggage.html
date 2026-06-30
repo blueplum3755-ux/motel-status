@@ -387,4 +387,16 @@ async function saveResults() {
 
 // ── 토스트 ───────────────────────────────────
 function showToast(msg) {
-  const t = document.getElementById('toas
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+// ── 초기화 ───────────────────────────────────
+initState();
+renderNotifBar();
+loadData();
+</script>
+</body>
+</html>
