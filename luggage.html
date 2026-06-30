@@ -76,6 +76,7 @@ body { display: flex; flex-direction: column; }
 
 /* ── 저장 버튼 ── */
 .save-bar { flex-shrink: 0; padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+.back-btn { display: flex; align-items: center; justify-content: center; padding: 13px 16px; border-radius: 10px; font-size: 15px; font-weight: 700; background: var(--surface2); color: var(--text); text-decoration: none; white-space: nowrap; }
 .save-btn { flex: 1; padding: 13px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; }
 .save-btn:disabled { background: var(--surface2); color: var(--text-sub); }
 
@@ -88,7 +89,6 @@ body { display: flex; flex-direction: column; }
 
 <div class="header">
   <div class="header-left">
-    <a href="index.html" style="font-size:11px;color:var(--text-sub);text-decoration:none;display:block;margin-bottom:2px;">← 현황으로</a>
     <div class="title">🧳 짐 체크</div>
     <div class="date" id="headerDate"></div>
   </div>
@@ -130,6 +130,7 @@ body { display: flex; flex-direction: column; }
 </div>
 
 <div class="save-bar">
+  <a class="back-btn" href="index.html">← 현황</a>
   <button class="save-btn" id="saveBtn" onclick="saveResults()">결과 저장</button>
 </div>
 
@@ -386,10 +387,4 @@ async function saveResults() {
 
 // ── 토스트 ───────────────────────────────────
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2800);
-}
-
-// ── 초기화 ────
+  const t = document.getElementById('toas
