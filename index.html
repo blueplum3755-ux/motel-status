@@ -35,6 +35,7 @@ body { display: flex; flex-direction: column; }
 .tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 2px solid var(--border); }
 .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 15px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 3px solid transparent; letter-spacing: 0.02em; }
 .tab-btn.active { color: #ffffff; border-bottom-color: var(--accent); }
+.tab-link { text-decoration: none; }
 
 /* ── 컨텐츠 ── */
 .content { flex: 1; overflow: hidden; }
@@ -161,6 +162,7 @@ body { display: flex; flex-direction: column; }
   <div class="tab-btn active" data-tab="status" onclick="switchTab('status')">현황</div>
   <div class="tab-btn" data-tab="cleaning" onclick="switchTab('cleaning')">청소</div>
   <div class="tab-btn" data-tab="reservation" onclick="switchTab('reservation')">예약하기</div>
+  <a class="tab-btn tab-link" href="luggage.html">🧳 짐체크</a>
 </div>
 
 <!-- 컨텐츠 -->
