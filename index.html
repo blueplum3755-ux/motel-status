@@ -31,20 +31,20 @@ body { display: flex; flex-direction: column; }
 .stat-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border-radius: 20px; padding: 4px 10px; font-size: 12px; color: var(--text-sub); }
 .stat-dot { width: 7px; height: 7px; border-radius: 50%; }
 
-/* ── 탭 바 ── */
-.tab-bar { flex-shrink: 0; display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
-.tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 500; color: var(--text-sub); cursor: pointer; border-bottom: 2px solid transparent; }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* ── 탭 바 (상단: 현황/청소/예약) ── */
+.tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 2px solid var(--border); }
+.tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 15px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 3px solid transparent; letter-spacing: 0.02em; }
+.tab-btn.active { color: #ffffff; border-bottom-color: var(--accent); }
 
 /* ── 컨텐츠 ── */
 .content { flex: 1; overflow: hidden; }
 .tab-panel { display: none; height: 100%; flex-direction: column; }
 .tab-panel.active { display: flex; }
 
-/* ── 상태 탭 ── */
-.status-tabs { flex-shrink: 0; display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
-.status-tab { flex: 1; padding: 10px 6px; font-size: 13px; font-weight: 500; color: var(--text-sub); cursor: pointer; text-align: center; border-bottom: 2px solid transparent; }
-.status-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* ── 상태 탭 (하단: 장기·재숙·입실/공실/예약) ── */
+.status-tabs { flex-shrink: 0; display: flex; background: #1e2235; border-bottom: 1px solid var(--border); }
+.status-tab { flex: 1; padding: 9px 6px; font-size: 13px; font-weight: 600; color: #8890b5; cursor: pointer; text-align: center; border-bottom: 2px solid transparent; letter-spacing: 0.01em; }
+.status-tab.active { color: #c8ccf0; border-bottom-color: var(--accent); background: #252a42; }
 
 /* ── 객실 그리드 ── */
 .floor-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; }
@@ -312,7 +312,7 @@ function renderHeader() {
     { label:'장기',   count: allRooms.filter(r => r.type === 'long').length,   color:'#f87171' },
     { label:'청소필요',count: allRooms.filter(r => r.needsClean).length,       color:'#fb923c' },
     { label:'예약',   count: allRooms.filter(r => r.isReserved).length,        color:'#fcd34d' },
-    { label:'재숙',   count: allRooms.filter(r => r.checkinLabel === '재숙').length, color:'#c084fc' },
+    { label:'재숙',   count: allRooms.filter(r => r.checkinLabel === '재숙').length, color:'#2dd4bf' },
   ].filter(c => c.count > 0);
 
   document.getElementById('statRow').innerHTML = chips.map(c =>
