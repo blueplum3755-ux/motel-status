@@ -347,8 +347,16 @@ function getRoomsForTab(tab) {
   return allRooms;
 }
 
+const SORT_ORDER = { reserved: 0, vacant: 1, long: 2, luggage: 3, stay: 4, dirty: 5 };
+
 function renderGrid() {
-  const rooms = getRoomsForTab(currentStatusTab);
+  const rooms = getRoomsForTab(currentStatusTab)
+    .slice()
+    .sort((a, b) => {
+      const oa = SORT_ORDER[classify(a)] ?? 9;
+      const ob = SORT_ORDER[classify(b)] ?? 9;
+      return oa !== ob ? oa - ob : a.room.localeCompare(b.room);
+    });
   if (!rooms.length) {
     document.getElementById('roomGrid').innerHTML = '<div class="loading" style="grid-column:1/-1">객실 없음</div>';
     return;
