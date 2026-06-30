@@ -106,6 +106,12 @@ body { display: flex; flex-direction: column; }
 .reservation-info { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 14px; }
 
+/* ── 그룹 구분선 ── */
+.group-divider { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 4px 0 2px; }
+.group-divider-label { font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.06em; white-space: nowrap; }
+.group-divider-line { flex: 1; height: 1px; background: var(--border); }
+.group-divider-count { font-size: 11px; color: var(--text-sub); }
+
 /* ── 로딩 ── */
 .loading { display: flex; justify-content: center; align-items: center; height: 160px; color: var(--text-sub); font-size: 14px; }
 
@@ -361,20 +367,33 @@ function renderGrid() {
     document.getElementById('roomGrid').innerHTML = '<div class="loading" style="grid-column:1/-1">객실 없음</div>';
     return;
   }
-  document.getElementById('roomGrid').innerHTML = rooms.map(r => {
+  const GROUP_LABEL = { reserved:'예약', vacant:'공실', long:'장기', luggage:'재숙', stay:'입실중', dirty:'청소필요' };
+  let lastCls = null;
+  const html = [];
+  rooms.forEach(r => {
     const cls = classify(r);
+    if (cls !== lastCls) {
+      const count = rooms.filter(x => classify(x) === cls).length;
+      html.push(`<div class="group-divider">
+        <span class="group-divider-label">${GROUP_LABEL[cls] || cls}</span>
+        <span class="group-divider-line"></span>
+        <span class="group-divider-count">${count}</span>
+      </div>`);
+      lastCls = cls;
+    }
     const label = statusLabel(cls, r);
     const sub = r.checkinTime
       ? (r.checkoutTime ? r.checkinTime + ' → ' + r.checkoutTime : r.checkinTime)
       : '';
-    return `<div class="room-card ${cls}">
+    html.push(`<div class="room-card ${cls}">
       ${r.occupied ? '<div class="occupied-dot"></div>' : ''}
       <div class="room-number">${r.room}</div>
       <div class="room-status">${label}</div>
       ${sub ? `<div class="room-sub">${sub}</div>` : ''}
       ${r.displayMemo ? `<div class="room-sub">${r.displayMemo}</div>` : ''}
-    </div>`;
-  }).join('');
+    </div>`);
+  });
+  document.getElementById('roomGrid').innerHTML = html.join('');
 }
 
 function renderCleaning() {
