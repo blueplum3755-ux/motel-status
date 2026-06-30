@@ -462,7 +462,20 @@ async function submitCancel() {
 
   try {
     await fetch(API, {
-      methfunction closeOutside(e, id) { if (e.target === document.getElementById(id)) clodeModal(id); }
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=reserve_request&room=${encodeURIComponent(selectedCancelRoom)}&kind=cancel`
+    });
+    showToast(selectedCancelRoom + '호 예약 취소 완료');
+  } catch (e) {
+    showToast('전송 오류 — 잠시 후 확인해주세요');
+  }
+}
+
+// ── 모달 유틸 ──────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeOutside(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
