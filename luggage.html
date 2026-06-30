@@ -11,17 +11,14 @@ body { display: flex; flex-direction: column; }
 
 /* ── 헤더 ── */
 .header {
-  flex-shrink: 0;
-  background: #fff;
-  border-bottom: 1px solid #e0e4ed;
+  flex-shrink: 0; background: #fff; border-bottom: 1px solid #e0e4ed;
   padding: 12px 16px 10px;
 }
 .header-row1 { display: flex; justify-content: space-between; align-items: center; }
 .h-title { font-size: 22px; font-weight: 900; color: #1a1a2e; white-space: nowrap; }
 .refresh-btn {
   background: #f0f2f5; border: 1px solid #d0d5e8; color: #444;
-  border-radius: 10px; padding: 8px 14px; font-size: 20px; cursor: pointer;
-  flex-shrink: 0;
+  border-radius: 10px; padding: 8px 14px; font-size: 20px; cursor: pointer; flex-shrink: 0;
 }
 .header-row2 { margin-top: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .h-date { font-size: 15px; font-weight: 700; color: #333; white-space: nowrap; }
@@ -29,11 +26,8 @@ body { display: flex; flex-direction: column; }
 
 /* ── 요약 바 ── */
 .summary-bar {
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background: #fff;
-  border-bottom: 2px solid #e0e4ed;
+  flex-shrink: 0; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: #fff; border-bottom: 2px solid #e0e4ed;
 }
 .s-chip { text-align: center; padding: 10px 4px; border-right: 1px solid #e0e4ed; }
 .s-chip:last-child { border-right: none; }
@@ -41,119 +35,62 @@ body { display: flex; flex-direction: column; }
 .s-label { font-size: 11px; color: #888; margin-top: 3px; white-space: nowrap; }
 .c-occupied { color: #dc2626; }
 .c-todo     { color: #d97706; }
-.c-yes      { color: #dc2626; }
-.c-no       { color: #16a34a; }
+.c-yes      { color: #7c3aed; }
+.c-long     { color: #64748b; }
 
 /* ── 스크롤 영역 ── */
-.scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 100px;
-}
+.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 100px; }
 
 /* ── 층 섹션 ── */
 .floor-section { padding: 0 12px 16px; }
-.floor-label {
-  font-size: 16px; font-weight: 900; color: #555;
-  padding: 14px 4px 8px;
-  white-space: nowrap;
-}
+.floor-label { font-size: 16px; font-weight: 900; color: #555; padding: 14px 4px 8px; white-space: nowrap; }
 
 /* ── 카드 그리드 (3열) ── */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 /* ── 카드 공통 ── */
 .lug-card {
-  border-radius: 14px;
-  border: 2.5px solid;
+  border-radius: 14px; border: 2.5px solid;
   padding: 12px 6px 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  min-height: 80px;
-  transition: transform 0.1s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  min-height: 80px; transition: transform 0.1s;
 }
 .lug-card.tappable { cursor: pointer; }
-.lug-card.tappable:active { transform: scale(0.94); }
+.lug-card.tappable:active { transform: scale(0.93); }
 
-.lug-room {
-  font-size: 28px;
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-.lug-status {
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.lug-hint {
-  font-size: 10px;
-  color: #999;
-  white-space: nowrap;
-}
+.lug-room   { font-size: 28px; font-weight: 900; line-height: 1; white-space: nowrap; }
+.lug-status { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
-/* ── 입실중 ── */
-.card-occupied {
-  background: #fef2f2;
-  border-color: #fca5a5;
-}
+/* 입실중 */
+.card-occupied { background: #fef2f2; border-color: #fca5a5; }
 .card-occupied .lug-room   { color: #dc2626; }
 .card-occupied .lug-status { color: #ef4444; }
 
-/* ── 확인필요 ── */
-.card-todo {
-  background: #fffbeb;
-  border-color: #fcd34d;
-}
+/* 장기 */
+.card-long { background: #f8fafc; border-color: #cbd5e1; }
+.card-long .lug-room   { color: #64748b; }
+.card-long .lug-status { color: #94a3b8; }
+
+/* 확인필요 */
+.card-todo { background: #fffbeb; border-color: #fcd34d; }
 .card-todo .lug-room   { color: #92400e; }
 .card-todo .lug-status { color: #d97706; }
 
-/* ── 짐있음 ── */
-.card-yes {
-  background: #fff0f0;
-  border-color: #f87171;
-}
-.card-yes .lug-room   { color: #dc2626; }
-.card-yes .lug-status { color: #dc2626; }
-.card-yes .lug-hint   { color: #f87171; }
+/* 짐있음 */
+.card-yes { background: #f5f3ff; border-color: #a78bfa; }
+.card-yes .lug-room   { color: #6d28d9; }
+.card-yes .lug-status { color: #7c3aed; }
 
-/* ── 짐없음 ── */
-.card-no {
-  background: #f0fdf4;
-  border-color: #86efac;
-}
-.card-no .lug-room   { color: #166534; }
-.card-no .lug-status { color: #16a34a; }
-.card-no .lug-hint   { color: #86efac; }
-
-/* ── 공실 ── */
-.card-empty {
-  background: #f9fafb;
-  border-color: #e5e7eb;
-  opacity: 0.6;
-}
+/* 공실 */
+.card-empty { background: #f9fafb; border-color: #e5e7eb; opacity: 0.55; }
 .card-empty .lug-room   { color: #9ca3af; }
 .card-empty .lug-status { color: #9ca3af; }
 
 /* ── 저장 바 ── */
 .save-bar {
-  flex-shrink: 0;
-  padding: 10px 14px;
+  flex-shrink: 0; padding: 10px 14px;
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  background: #fff;
-  border-top: 2px solid #e0e4ed;
-  display: flex;
-  gap: 10px;
+  background: #fff; border-top: 2px solid #e0e4ed; display: flex; gap: 10px;
 }
 .back-btn {
   display: flex; align-items: center; justify-content: center;
@@ -163,69 +100,40 @@ body { display: flex; flex-direction: column; }
   text-decoration: none; white-space: nowrap; border: 1px solid #d0d5e8;
 }
 .save-btn {
-  flex: 1; min-height: 56px;
-  border: none; border-radius: 12px;
-  font-size: 18px; font-weight: 900;
-  cursor: pointer; white-space: nowrap;
-  transition: all 0.15s;
+  flex: 1; min-height: 56px; border: none; border-radius: 12px;
+  font-size: 18px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.15s;
 }
 .save-btn:not(:disabled) { background: #2563eb; color: #fff; }
 .save-btn:disabled       { background: #e5e7eb; color: #9ca3af; cursor: default; }
 
-/* ── 바텀 시트 모달 ── */
+/* ── 저장 확인 모달 ── */
 .modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex; align-items: flex-end;
-  z-index: 100;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; z-index: 100;
 }
-.modal-sheet {
-  background: #fff;
-  border-radius: 22px 22px 0 0;
-  width: 100%;
-  padding: 24px 20px 32px;
-  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+.modal-box {
+  background: #fff; border-radius: 20px; width: 100%; max-width: 320px;
+  padding: 28px 24px 20px; text-align: center;
 }
-.modal-room {
-  text-align: center;
-  font-size: 38px; font-weight: 900; color: #1a1a2e;
-  white-space: nowrap;
+.modal-title { font-size: 18px; font-weight: 900; color: #1a1a2e; margin-bottom: 20px; white-space: nowrap; }
+.modal-stats {
+  display: flex; gap: 8px; justify-content: center; margin-bottom: 24px;
 }
-.modal-sub {
-  text-align: center;
-  font-size: 15px; color: #888; margin-top: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.stat-box {
+  flex: 1; background: #f8fafc; border-radius: 12px; padding: 14px 8px;
 }
-.modal-btns { display: flex; gap: 12px; margin-top: 20px; }
-.modal-btn {
-  flex: 1; min-height: 64px;
-  border-radius: 14px; border: 2.5px solid;
-  font-size: 20px; font-weight: 900;
-  cursor: pointer; background: transparent;
-  white-space: nowrap;
-}
-.modal-btn:active { transform: scale(0.96); }
-.modal-btn-yes { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
-.modal-btn-no  { border-color: #86efac; color: #166534; background: #f0fdf4; }
-.modal-cancel {
-  width: 100%; min-height: 52px; margin-top: 10px;
-  border-radius: 12px; border: 1px solid #e0e4ed;
-  background: #f9fafb; color: #888; font-size: 16px; font-weight: 700;
-  cursor: pointer; white-space: nowrap;
-}
+.stat-num   { font-size: 28px; font-weight: 900; line-height: 1; }
+.stat-label { font-size: 12px; color: #888; margin-top: 4px; white-space: nowrap; }
+.stat-box.yes .stat-num { color: #7c3aed; }
+.stat-box.total .stat-num { color: #1a1a2e; }
+.stat-box.empty .stat-num { color: #16a34a; }
+.modal-btns { display: flex; gap: 10px; }
+.modal-cancel { flex: 1; min-height: 52px; border-radius: 12px; border: 1px solid #e0e4ed; background: #f9fafb; color: #555; font-size: 16px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.modal-save   { flex: 2; min-height: 52px; border-radius: 12px; border: none; background: #2563eb; color: #fff; font-size: 16px; font-weight: 900; cursor: pointer; white-space: nowrap; }
 
 /* ── 토스트 ── */
-.toast {
-  position: fixed; bottom: 90px; left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: #1a1a2e; color: #fff;
-  padding: 12px 24px; border-radius: 20px;
-  font-size: 15px; z-index: 200;
-  transition: transform 0.25s;
-  white-space: nowrap; pointer-events: none;
-}
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 15px; z-index: 200; transition: transform 0.25s; white-space: nowrap; pointer-events: none; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -246,7 +154,7 @@ body { display: flex; flex-direction: column; }
   <div class="s-chip"><div class="s-num c-occupied" id="cntOccupied">-</div><div class="s-label">입실중</div></div>
   <div class="s-chip"><div class="s-num c-todo"     id="cntTodo">-</div><div class="s-label">확인필요</div></div>
   <div class="s-chip"><div class="s-num c-yes"      id="cntYes">-</div><div class="s-label">짐있음</div></div>
-  <div class="s-chip"><div class="s-num c-no"       id="cntNo">-</div><div class="s-label">짐없음</div></div>
+  <div class="s-chip"><div class="s-num c-long"     id="cntLong">-</div><div class="s-label">장기</div></div>
 </div>
 
 <div class="scroll-area">
@@ -255,7 +163,7 @@ body { display: flex; flex-direction: column; }
 
 <div class="save-bar">
   <a class="back-btn" href="index.html">← 현황</a>
-  <button class="save-btn" id="saveBtn" onclick="saveResults()" disabled>체크 후 저장</button>
+  <button class="save-btn" id="saveBtn" onclick="confirmSave()" disabled>체크 후 저장</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -269,17 +177,17 @@ const FIXED_FLOORS = {
   5: ['501','502','503','504','505','506','507','508','509','510']
 };
 
-let allRooms   = [];
-let luggageChecked = {}; // room → 'yes' | 'no'
-let refreshTimer   = null;
+let allRooms = [];
+let luggageYes = {};  // room → true (짐있음만 추적)
+let refreshTimer = null;
 
 /* ── 세션 상태 ─────────────────────────────── */
 function initState() {
   const today = new Date().toLocaleDateString('ko-KR');
   if (sessionStorage.getItem('lugDate') === today) {
-    luggageChecked = JSON.parse(sessionStorage.getItem('lugChecked') || '{}');
+    luggageYes = JSON.parse(sessionStorage.getItem('lugYes') || '{}');
   } else {
-    luggageChecked = {};
+    luggageYes = {};
     sessionStorage.setItem('lugDate', today);
   }
   document.getElementById('headerDate').textContent =
@@ -288,7 +196,7 @@ function initState() {
 
 function saveState() {
   sessionStorage.setItem('lugDate', new Date().toLocaleDateString('ko-KR'));
-  sessionStorage.setItem('lugChecked', JSON.stringify(luggageChecked));
+  sessionStorage.setItem('lugYes', JSON.stringify(luggageYes));
 }
 
 /* ── JSONP ─────────────────────────────────── */
@@ -299,8 +207,7 @@ function fetchJsonp(url) {
     const timer = setTimeout(function() { cleanup(); reject(new Error('timeout')); }, 12000);
     window[cb] = function(data) { cleanup(); resolve(data); };
     function cleanup() {
-      clearTimeout(timer);
-      delete window[cb];
+      clearTimeout(timer); delete window[cb];
       if (script.parentNode) script.parentNode.removeChild(script);
     }
     script.onerror = function() { cleanup(); reject(new Error('network error')); };
@@ -336,28 +243,37 @@ async function loadData() {
 }
 
 /* ── 객실 상태 판별 ─────────────────────────── */
-// 반환값: 'occupied' | 'todo' | 'empty'
+// 'occupied' | 'long' | 'todo' | 'empty'
 function getRoomLiveState(roomNum) {
   const r = allRooms.find(function(x) { return x.room === roomNum; });
   if (!r) return 'empty';
-  if (r.type === 'normal' && r.occupied) return 'occupied';  // 입실중
-  if (r.type === 'empty' || (r.type === 'normal' && !r.occupied)) return 'todo'; // 퇴실/외출
+
+  // 장기객실 (stayType에 J 포함)
+  if (r.type === 'long') return 'long';
+
+  // 입실중 (방 안에 있음)
+  if (r.type === 'normal' && r.occupied) return 'occupied';
+
+  // 확인필요: 일반투숙 외출중(OUT) 또는 퇴실(EMPTY)인데 입실 이력 있음
+  if (r.type === 'normal' && !r.occupied) return 'todo';
+
+  // 공실 (EMPTY + 입실이력 없음)
   return 'empty';
 }
 
-/* 정렬 우선순위: 입실중(0) → 확인필요(1) → 체크완료(2) → 공실(3) */
+/* 정렬 우선순위: 입실중(0) → 장기(1) → 확인필요(2) → 짐있음(3) → 공실(4) */
 function sortPriority(roomNum) {
-  const chk  = luggageChecked[roomNum];
   const live = getRoomLiveState(roomNum);
   if (live === 'occupied') return 0;
-  if (live === 'todo' && !chk) return 1;
-  if (chk) return 2;
-  return 3;
+  if (live === 'long')     return 1;
+  if (live === 'todo' && !luggageYes[roomNum]) return 2;
+  if (luggageYes[roomNum]) return 3;
+  return 4;
 }
 
 /* ── 렌더 ───────────────────────────────────── */
 function render() {
-  let cntOccupied = 0, cntTodo = 0, cntYes = 0, cntNo = 0;
+  let cntOccupied = 0, cntTodo = 0, cntYes = 0, cntLong = 0;
 
   const html = Object.entries(FIXED_FLOORS).map(function(entry) {
     const floor = entry[0];
@@ -371,9 +287,9 @@ function render() {
 
     const cards = sorted.map(function(roomNum) {
       const live = getRoomLiveState(roomNum);
-      const chk  = luggageChecked[roomNum];
+      const isYes = luggageYes[roomNum];
 
-      /* 입실중 — 터치 불가 */
+      /* 입실중 */
       if (live === 'occupied') {
         cntOccupied++;
         return `<div class="lug-card card-occupied">
@@ -382,30 +298,28 @@ function render() {
         </div>`;
       }
 
-      /* 짐있음 — 탭으로 취소 */
-      if (chk === 'yes') {
+      /* 장기 */
+      if (live === 'long') {
+        cntLong++;
+        return `<div class="lug-card card-long">
+          <div class="lug-room">${roomNum}</div>
+          <div class="lug-status">📋 장기</div>
+        </div>`;
+      }
+
+      /* 짐있음 (터치 → 취소) */
+      if (isYes) {
         cntYes++;
-        return `<div class="lug-card card-yes tappable" onclick="mark('${roomNum}',null)">
+        return `<div class="lug-card card-yes tappable" onclick="toggle('${roomNum}')">
           <div class="lug-room">${roomNum}</div>
           <div class="lug-status">✅ 짐있음</div>
-          <div class="lug-hint">탭 → 취소</div>
         </div>`;
       }
 
-      /* 짐없음 — 탭으로 취소 */
-      if (chk === 'no') {
-        cntNo++;
-        return `<div class="lug-card card-no tappable" onclick="mark('${roomNum}',null)">
-          <div class="lug-room">${roomNum}</div>
-          <div class="lug-status">✔ 짐없음</div>
-          <div class="lug-hint">탭 → 취소</div>
-        </div>`;
-      }
-
-      /* 확인필요 — 터치 가능 */
+      /* 확인필요 (터치 → 짐있음) */
       if (live === 'todo') {
         cntTodo++;
-        return `<div class="lug-card card-todo tappable" onclick="openModal('${roomNum}')">
+        return `<div class="lug-card card-todo tappable" onclick="toggle('${roomNum}')">
           <div class="lug-room">${roomNum}</div>
           <div class="lug-status">❗확인필요</div>
         </div>`;
@@ -429,28 +343,74 @@ function render() {
   document.getElementById('cntOccupied').textContent = cntOccupied;
   document.getElementById('cntTodo').textContent      = cntTodo;
   document.getElementById('cntYes').textContent       = cntYes;
-  document.getElementById('cntNo').textContent        = cntNo;
+  document.getElementById('cntLong').textContent      = cntLong;
 
-  updateSaveBtn(cntYes + cntNo);
+  updateSaveBtn(cntYes);
 }
 
-/* ── 체크 모달 ──────────────────────────────── */
-function openModal(roomNum) {
-  const existing = document.getElementById('lugModal');
-  if (existing) existing.remove();
+/* ── 직접 토글 (팝업 없음) ──────────────────── */
+function toggle(roomNum) {
+  if (luggageYes[roomNum]) {
+    delete luggageYes[roomNum]; // 짐있음 → 확인필요로 되돌림
+  } else {
+    luggageYes[roomNum] = true;  // 확인필요 → 짐있음
+  }
+  saveState();
+  render();
+}
+
+/* ── 저장 버튼 ──────────────────────────────── */
+function updateSaveBtn(yesCount) {
+  const btn = document.getElementById('saveBtn');
+  if (yesCount > 0) {
+    btn.disabled = false;
+    btn.textContent = '✓ ' + yesCount + '건 저장하기';
+  } else {
+    btn.disabled = true;
+    btn.textContent = '체크 후 저장';
+  }
+}
+
+/* ── 저장 확인 팝업 ─────────────────────────── */
+function confirmSave() {
+  const yesRooms = Object.keys(luggageYes);
+  if (!yesRooms.length) { showToast('체크된 항목이 없습니다'); return; }
+
+  // 통계 계산
+  let cntTodo = 0;
+  Object.entries(FIXED_FLOORS).forEach(function(entry) {
+    entry[1].forEach(function(roomNum) {
+      const live = getRoomLiveState(roomNum);
+      if (live === 'todo' && !luggageYes[roomNum]) cntTodo++;
+    });
+  });
+
+  const totalCheckable = yesRooms.length + cntTodo;
 
   const overlay = document.createElement('div');
-  overlay.id = 'lugModal';
+  overlay.id = 'saveModal';
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
-    <div class="modal-sheet">
-      <div class="modal-room">${roomNum}호</div>
-      <div class="modal-sub">짐 체크 결과를 선택하세요</div>
-      <div class="modal-btns">
-        <button class="modal-btn modal-btn-yes" onclick="mark('${roomNum}','yes')">✅ 짐 있음</button>
-        <button class="modal-btn modal-btn-no"  onclick="mark('${roomNum}','no')">✔ 없 음</button>
+    <div class="modal-box">
+      <div class="modal-title">현재 기록을 저장할까요?</div>
+      <div class="modal-stats">
+        <div class="stat-box total">
+          <div class="stat-num">${totalCheckable}</div>
+          <div class="stat-label">확인대상</div>
+        </div>
+        <div class="stat-box empty">
+          <div class="stat-num">${cntTodo}</div>
+          <div class="stat-label">짐없음</div>
+        </div>
+        <div class="stat-box yes">
+          <div class="stat-num">${yesRooms.length}</div>
+          <div class="stat-label">짐있음</div>
+        </div>
       </div>
-      <button class="modal-cancel" onclick="closeModal()">취소</button>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeModal()">취소</button>
+        <button class="modal-save"   onclick="doSave()">저장</button>
+      </div>
     </div>
   `;
   overlay.addEventListener('click', function(e) {
@@ -460,42 +420,21 @@ function openModal(roomNum) {
 }
 
 function closeModal() {
-  const m = document.getElementById('lugModal');
+  const m = document.getElementById('saveModal');
   if (m) m.remove();
 }
 
-/* ── 체크 기록 ──────────────────────────────── */
-function mark(roomNum, val) {
+/* ── 실제 저장 ──────────────────────────────── */
+async function doSave() {
   closeModal();
-  if (val === null) {
-    delete luggageChecked[roomNum];
-  } else {
-    luggageChecked[roomNum] = val;
-  }
-  saveState();
-  render();
-}
+  const yesRooms = Object.keys(luggageYes);
+  if (!yesRooms.length) return;
 
-/* ── 저장 버튼 ──────────────────────────────── */
-function updateSaveBtn(count) {
-  const btn = document.getElementById('saveBtn');
-  if (count > 0) {
-    btn.disabled = false;
-    btn.textContent = '✓ ' + count + '건 저장하기';
-  } else {
-    btn.disabled = true;
-    btn.textContent = '체크 후 저장';
-  }
-}
-
-async function saveResults() {
-  const entries = Object.entries(luggageChecked);
-  if (!entries.length) { showToast('체크된 항목이 없습니다'); return; }
   const date    = new Date().toLocaleDateString('ko-KR');
-  const results = entries.map(function(e) { return e[0] + '=' + e[1]; }).join(',');
+  const results = yesRooms.map(function(r) { return r + '=yes'; }).join(',');
   const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.textContent = '저장 중...';
+  btn.disabled = true; btn.textContent = '저장 중...';
+
   try {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
@@ -505,8 +444,7 @@ async function saveResults() {
     showToast('✓ 저장 완료!');
     btn.textContent = '✓ 저장됨';
   } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '다시 저장하기';
+    btn.disabled = false; btn.textContent = '다시 저장하기';
     showToast('저장 오류 — 잠시 후 다시 시도해주세요');
   }
 }
@@ -514,8 +452,7 @@ async function saveResults() {
 /* ── 토스트 ─────────────────────────────────── */
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
