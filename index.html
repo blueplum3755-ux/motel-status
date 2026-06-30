@@ -236,18 +236,37 @@ let selectedReserveRoom = null;
 let selectedCancelRoom = null;
 let refreshTimer = null;
 
+// ── JSONP 유틸 ──────────────────────────────
+function fetchJsonp(url) {
+  return new Promise(function(resolve, reject) {
+    var cb = 'cb_' + Date.now();
+    var script = document.createElement('script');
+    var timer = setTimeout(function() {
+      cleanup(); reject(new Error('timeout'));
+    }, 12000);
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    script.onerror = function() { cleanup(); reject(new Error('network error')); };
+    script.src = url + '&callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
 // ── 데이터 로드 ─────────────────────────────
 async function loadData() {
   try {
     document.getElementById('updatedAt').textContent = '불러오는 중...';
-    const res = await fetch(API + '?action=data');
-    const data = await res.json();
+    const data = await fetchJsonp(API + '?action=data');
     allRooms = data.rooms || [];
     const t = (data.updatedAt || '').substring(5, 16);
     document.getElementById('updatedAt').textContent = 'RMS: ' + t;
     renderAll();
   } catch (e) {
-    document.getElementById('updatedAt').textContent = '오류 — 새로고침 눌러주세요';
+    document.getElementById('updatedAt').textContent = '오류: ' + e.message;
   }
   if (refreshTimer) clearTimeout(refreshTimer);
   refreshTimer = setTimeout(loadData, 60000);
