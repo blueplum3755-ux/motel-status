@@ -457,7 +457,7 @@ async function submitReservation() {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=reserve_request&room=${encodeURIComponent(selectedReserveRoom)}&kind=%EC%88%99%EB%B0%95&memo=${encodeURIComponent(memo)}`
+      body: `action=reserve_request&room=${encodeURIComponent(selectedReserveRoom)}&kind=%EC%98%88%EC%95%BD&memo=${encodeURIComponent(memo)}`
     });
     showToast(selectedReserveRoom + '호 예약 요청 완료');
   } catch (e) {
@@ -491,7 +491,7 @@ async function submitCancel() {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=reserve_request&room=${encodeURIComponent(selectedCancelRoom)}&kind=cancel`
+      body: `action=reserve_request&room=${encodeURIComponent(selectedCancelRoom)}&kind=%EC%B7%A8%EC%86%8C`
     });
     showToast(selectedCancelRoom + '호 예약 취소 완료');
   } catch (e) {
