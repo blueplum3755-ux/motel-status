@@ -55,12 +55,17 @@ body { display: flex; flex-direction: column; }
 
 /* ── 품목 선택 칩 ── */
 .menu-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.menu-chip { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.15s; }
+.menu-chip { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.15s; user-select: none; }
 .menu-chip .menu-name { font-size: 13px; font-weight: 600; color: var(--text-sub); display: block; }
 .menu-chip .menu-price { font-size: 11px; color: #4b5180; margin-top: 2px; display: block; }
-.menu-chip.selected { border-color: #4ade80; background: #0d2b1a; }
+.menu-chip.selected { border-color: #4ade80; background: #0d2b1a; cursor: default; }
 .menu-chip.selected .menu-name { color: #4ade80; }
-.menu-chip.selected .menu-price { color: #2a7a4a; }
+.menu-chip.selected .menu-price { color: #4ade80; font-weight: 700; }
+/* 수량 조절 행 */
+.qty-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; gap: 6px; }
+.qty-btn { background: #1a3d28; border: 1px solid #4ade80; color: #4ade80; border-radius: 6px; width: 26px; height: 26px; font-size: 18px; line-height: 1; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.qty-val { font-size: 15px; font-weight: 800; color: #4ade80; min-width: 20px; text-align: center; }
+.qty-remove { background: none; border: none; color: #f87171; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; }
 
 /* ── 금액 합산 표시 ── */
 .amount-display { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
@@ -315,7 +320,7 @@ currentMonth.setDate(1);
 let selectedMeal   = '조식';
 let selectedVendor = '';
 let selectedTeam   = '';
-let selectedMenus  = {};   // { menuName: price }
+let selectedMenus  = {};   // { menuName: { price, qty } }
 
 // ── localStorage 헬퍼 ────────────────────────
 function getVendors() { return JSON.parse(localStorage.getItem('sd_vendors') || '[]'); }
@@ -420,11 +425,27 @@ function renderInputChips() {
     mGrid.innerHTML = '<span class="chip-empty">⚙ 설정 탭에서 품목을 등록해주세요</span>';
   } else {
     mGrid.innerHTML = menus.map(function(m) {
-      var sel = selectedMenus[m.name] !== undefined ? ' selected' : '';
-      return '<div class="menu-chip' + sel + '" onclick="toggleMenu(\'' + esc(m.name) + '\',' + m.price + ')">'
-        + '<span class="menu-name">' + m.name + '</span>'
-        + '<span class="menu-price">' + fmt(m.price) + '원</span>'
-        + '</div>';
+      var entry = selectedMenus[m.name];
+      if (entry) {
+        // 선택됨 → 수량 조절 UI 표시
+        var lineTotal = entry.price * entry.qty;
+        return '<div class="menu-chip selected">'
+          + '<span class="menu-name">' + m.name + '</span>'
+          + '<div class="qty-row">'
+          +   '<button class="qty-btn" onclick="changeQty(\'' + esc(m.name) + '\',-1)">−</button>'
+          +   '<span class="qty-val">' + entry.qty + '</span>'
+          +   '<button class="qty-btn" onclick="changeQty(\'' + esc(m.name) + '\',1)">+</button>'
+          +   '<button class="qty-remove" onclick="removeMenu(\'' + esc(m.name) + '\')">×</button>'
+          + '</div>'
+          + '<span class="menu-price">' + fmt(lineTotal) + '원</span>'
+          + '</div>';
+      } else {
+        // 미선택 → 탭하면 선택
+        return '<div class="menu-chip" onclick="toggleMenu(\'' + esc(m.name) + '\',' + m.price + ')">'
+          + '<span class="menu-name">' + m.name + '</span>'
+          + '<span class="menu-price">' + fmt(m.price) + '원</span>'
+          + '</div>';
+      }
     }).join('');
   }
 
@@ -441,11 +462,18 @@ function selectTeam(t) {
   renderInputChips();
 }
 function toggleMenu(name, price) {
-  if (selectedMenus[name] !== undefined) {
-    delete selectedMenus[name];
-  } else {
-    selectedMenus[name] = price;
-  }
+  selectedMenus[name] = { price: price, qty: 1 };
+  renderInputChips();
+}
+function changeQty(name, delta) {
+  if (!selectedMenus[name]) return;
+  var newQty = selectedMenus[name].qty + delta;
+  if (newQty < 1) { delete selectedMenus[name]; }
+  else { selectedMenus[name].qty = newQty; }
+  renderInputChips();
+}
+function removeMenu(name) {
+  delete selectedMenus[name];
   renderInputChips();
 }
 function selectMeal(el) {
@@ -456,12 +484,15 @@ function selectMeal(el) {
 
 function updateAmountDisplay() {
   var entries = Object.entries(selectedMenus);
-  var total = entries.reduce(function(s, e){ return s + e[1]; }, 0);
+  var total = entries.reduce(function(s, e){ return s + e[1].price * e[1].qty; }, 0);
   document.getElementById('amountTotal').textContent = fmt(total) + '원';
   var breakdown = document.getElementById('amountBreakdown');
-  if (entries.length > 1) {
+  if (entries.length > 0) {
     breakdown.style.display = 'block';
-    breakdown.textContent = entries.map(function(e){ return e[0] + ' ' + fmt(e[1]) + '원'; }).join(' + ');
+    breakdown.textContent = entries.map(function(e){
+      var line = e[1].price * e[1].qty;
+      return e[0] + (e[1].qty > 1 ? ' ×' + e[1].qty : '') + '  ' + fmt(line) + '원';
+    }).join('\n');
   } else {
     breakdown.style.display = 'none';
   }
@@ -470,8 +501,11 @@ function updateAmountDisplay() {
 // ── 저장 ─────────────────────────────────────
 async function addRecord() {
   var date   = document.getElementById('inputDate').value;
-  var amount = Object.values(selectedMenus).reduce(function(s,p){ return s+p; }, 0);
-  var itemNames = Object.keys(selectedMenus).join(',');
+  var amount = Object.entries(selectedMenus).reduce(function(s,e){ return s + e[1].price * e[1].qty; }, 0);
+  // 품목 문자열: "설렁탕×2,김치찌개×1" (수량 1이면 "설렁탕")
+  var itemNames = Object.entries(selectedMenus).map(function(e){
+    return e[0] + (e[1].qty > 1 ? '×' + e[1].qty : '');
+  }).join(',');
 
   if (!date)           { showToast('날짜를 입력해주세요'); return; }
   if (!selectedVendor) { showToast('업체를 선택해주세요'); return; }
