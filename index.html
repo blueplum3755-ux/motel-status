@@ -134,36 +134,6 @@ body { display: flex; flex-direction: column; }
 .btn-confirm { flex: 2; padding: 14px; background: var(--accent); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
 .btn-confirm.danger { background: #c0392b; }
 
-/* ── 짐체크 탭 ── */
-.lug-notif-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: #12151f; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-sub); cursor: pointer; flex-shrink: 0; }
-.lug-notif-dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3f60; flex-shrink: 0; }
-.lug-notif-dot.on { background: #4ade80; box-shadow: 0 0 5px #4ade80; }
-.lug-header { padding: 10px 14px 8px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-.lug-header-title { font-size: 14px; font-weight: 700; color: var(--text); }
-.lug-date { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
-.lug-save-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.lug-section { padding: 8px 12px 4px; font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.05em; text-transform: uppercase; }
-.lug-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 4px 12px 14px; }
-@media (min-width: 480px) { .lug-grid { grid-template-columns: repeat(4, 1fr); } }
-.lug-card { border-radius: 12px; border: 1px solid; padding: 10px 8px 8px; display: flex; flex-direction: column; gap: 4px; }
-.lug-card.waiting    { background: #2b1800; border-color: #6b3f00; }
-.lug-card.ready      { background: #001a0a; border-color: #1a5c35; }
-.lug-card.checked-yes { background: #0d2429; border-color: #1a5c52; }
-.lug-card.checked-no  { background: #181a27; border-color: #2d3148; }
-.lug-room { font-size: 20px; font-weight: 700; }
-.lug-card.waiting     .lug-room { color: #fb923c; }
-.lug-card.ready       .lug-room { color: #4ade80; }
-.lug-card.checked-yes .lug-room { color: #2dd4bf; }
-.lug-card.checked-no  .lug-room { color: #6b7199; }
-.lug-status { font-size: 10px; font-weight: 600; color: var(--text-sub); }
-.lug-btns { display: flex; gap: 4px; margin-top: 2px; }
-.lug-btn { flex: 1; padding: 5px 0; border-radius: 6px; border: 1px solid; font-size: 11px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-sub); border-color: var(--border); }
-.lug-btn.yes { border-color: #1a5c52; color: #2dd4bf; }
-.lug-btn.yes.active { background: #0d2429; }
-.lug-btn.no.active  { background: #1a1d27; border-color: #4b5180; color: var(--text); }
-.lug-empty { text-align: center; padding: 30px 16px; color: var(--text-sub); font-size: 13px; line-height: 1.6; grid-column: 1/-1; }
-.lug-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
 /* ── 토스트 ── */
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 200; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
 .toast.show { transform: translateX(-50%) translateY(0); }
@@ -191,7 +161,6 @@ body { display: flex; flex-direction: column; }
   <div class="tab-btn active" data-tab="status" onclick="switchTab('status')">현황</div>
   <div class="tab-btn" data-tab="cleaning" onclick="switchTab('cleaning')">청소</div>
   <div class="tab-btn" data-tab="reservation" onclick="switchTab('reservation')">예약하기</div>
-  <div class="tab-btn" data-tab="luggage" onclick="switchTab('luggage')">짐체크</div>
 </div>
 
 <!-- 컨텐츠 -->
@@ -219,27 +188,6 @@ body { display: flex; flex-direction: column; }
       <div class="clean-grid" id="cleanNeedList"></div>
       <div class="section-title">청소 완료</div>
       <div class="clean-grid" id="cleanDoneList"></div>
-    </div>
-  </div>
-
-  <!-- 짐체크 탭 -->
-  <div class="tab-panel" id="tab-luggage">
-    <div class="lug-notif-bar" id="notifBar" onclick="toggleNotification()">
-      <div class="lug-notif-dot" id="notifDot"></div>
-      <span id="notifLabel">탭하여 퇴실 알림 허용</span>
-    </div>
-    <div class="lug-header">
-      <div>
-        <div class="lug-header-title">짐 체크 현황</div>
-        <div class="lug-date" id="lugDate"></div>
-      </div>
-      <button class="lug-save-btn" onclick="saveLuggageResults()">저장</button>
-    </div>
-    <div class="lug-scroll">
-      <div class="lug-section" id="lugWaitSection">대기중 (아직 투숙중)</div>
-      <div class="lug-grid" id="lugWaitGrid"></div>
-      <div class="lug-section" id="lugReadySection">체크 가능 (퇴실완료)</div>
-      <div class="lug-grid" id="lugReadyGrid"></div>
     </div>
   </div>
 
@@ -336,7 +284,6 @@ async function loadData() {
   allRooms = data.rooms || [];
   const t = (data.updatedAt || '').substring(5, 16);
   document.getElementById('updatedAt').textContent = 'RMS: ' + t;
-  updateLuggageTracking();
   renderAll();
   if (refreshTimer) clearTimeout(refreshTimer);
   refreshTimer = setTimeout(loadData, 60000);
@@ -347,7 +294,6 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'luggage') clearLuggageBadge();
 }
 
 // ── 분류 ───────────────────────────────────
@@ -372,7 +318,6 @@ function renderAll() {
   renderGrid();
   renderCleaning();
   renderReservations();
-  renderLuggageCheck();
 }
 
 function renderHeader() {
@@ -565,201 +510,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── 짐체크 상태 ────────────────────────────
-let luggageTargets = new Set();
-let luggageWaiting = new Set();
-let luggageChecked = {};
-
-function initLuggageState() {
-  const today = new Date().toLocaleDateString('ko-KR');
-  if (sessionStorage.getItem('luggageDate') === today) {
-    luggageTargets = new Set(JSON.parse(sessionStorage.getItem('luggageTargets') || '[]'));
-    luggageWaiting = new Set(JSON.parse(sessionStorage.getItem('luggageWaiting') || '[]'));
-    luggageChecked = JSON.parse(sessionStorage.getItem('luggageChecked') || '{}');
-  } else {
-    luggageTargets = new Set();
-    luggageWaiting = new Set();
-    luggageChecked = {};
-    sessionStorage.setItem('luggageDate', today);
-  }
-}
-
-function saveLuggageSession() {
-  const today = new Date().toLocaleDateString('ko-KR');
-  sessionStorage.setItem('luggageDate', today);
-  sessionStorage.setItem('luggageTargets', JSON.stringify([...luggageTargets]));
-  sessionStorage.setItem('luggageWaiting', JSON.stringify([...luggageWaiting]));
-  sessionStorage.setItem('luggageChecked', JSON.stringify(luggageChecked));
-}
-
-function updateLuggageTracking() {
-  // '어제입실' 방을 대상에 추가
-  allRooms.filter(r => r.checkinLabel === '어제입실').forEach(r => {
-    luggageTargets.add(r.room);
-  });
-
-  // 현재 투숙중인 대상 방
-  const nowWaiting = new Set(
-    allRooms.filter(r => r.type === 'normal' && luggageTargets.has(r.room)).map(r => r.room)
-  );
-
-  // 이전엔 대기중이었다가 지금은 사라진 방 = 퇴실 → 알림
-  luggageWaiting.forEach(room => {
-    if (!nowWaiting.has(room)) fireCheckoutAlert(room);
-  });
-
-  luggageWaiting = nowWaiting;
-  saveLuggageSession();
-}
-
-function fireCheckoutAlert(room) {
-  playBeep();
-  if (Notification.permission === 'granted') {
-    new Notification('🛎 짐체크 필요', {
-      body: room + '호 퇴실 확인 — 짐 확인해주세요',
-      requireInteraction: true
-    });
-  }
-  showLuggageBadge();
-  showToast('🔔 ' + room + '호 퇴실 — 짐체크 필요!');
-}
-
-function playBeep() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 180, 360].forEach(delay => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 900;
-      osc.type = 'sine';
-      const t = ctx.currentTime + delay / 1000;
-      gain.gain.setValueAtTime(0.4, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-      osc.start(t);
-      osc.stop(t + 0.4);
-    });
-  } catch (e) {}
-}
-
-let luggageBadge = false;
-function showLuggageBadge() {
-  luggageBadge = true;
-  const btn = document.querySelector('[data-tab="luggage"]');
-  if (btn) btn.textContent = '짐체크 🔔';
-}
-function clearLuggageBadge() {
-  luggageBadge = false;
-  const btn = document.querySelector('[data-tab="luggage"]');
-  if (btn) btn.textContent = '짐체크';
-}
-
-async function toggleNotification() {
-  const perm = Notification.permission;
-  if (perm === 'granted') {
-    showToast('알림이 이미 허용되어 있습니다 ✓');
-  } else if (perm === 'denied') {
-    showToast('브라우저 설정에서 알림을 허용해주세요');
-  } else {
-    await Notification.requestPermission();
-    renderNotifBar();
-    if (Notification.permission === 'granted') showToast('알림 허용됨 ✓');
-  }
-}
-
-function renderNotifBar() {
-  const dot = document.getElementById('notifDot');
-  const label = document.getElementById('notifLabel');
-  if (!dot || !label) return;
-  const perm = Notification.permission;
-  if (perm === 'granted') {
-    dot.className = 'lug-notif-dot on';
-    label.textContent = '알림 허용됨 — 퇴실 감지 시 자동 알림';
-  } else if (perm === 'denied') {
-    dot.className = 'lug-notif-dot';
-    label.textContent = '알림 차단됨 — 브라우저 설정에서 허용 필요';
-  } else {
-    dot.className = 'lug-notif-dot';
-    label.textContent = '탭하여 퇴실 알림 허용';
-  }
-}
-
-function setLuggage(room, val) {
-  luggageChecked[room] = val;
-  saveLuggageSession();
-  renderLuggageCheck();
-}
-
-function renderLuggageCheck() {
-  const today = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-  const elDate = document.getElementById('lugDate');
-  if (elDate) elDate.textContent = today;
-  renderNotifBar();
-
-  const targets = [...luggageTargets];
-  const waitGrid  = document.getElementById('lugWaitGrid');
-  const readyGrid = document.getElementById('lugReadyGrid');
-  const waitSec   = document.getElementById('lugWaitSection');
-  const readySec  = document.getElementById('lugReadySection');
-  if (!waitGrid) return;
-
-  const waiting = allRooms.filter(r => targets.includes(r.room) && r.type === 'normal')
-    .sort((a, b) => a.room.localeCompare(b.room));
-  const ready = allRooms.filter(r => targets.includes(r.room) && r.type === 'empty')
-    .sort((a, b) => a.room.localeCompare(b.room));
-
-  if (targets.length === 0) {
-    waitSec.style.display = 'none';
-    readySec.style.display = 'none';
-    waitGrid.innerHTML = '';
-    readyGrid.innerHTML = '<div class="lug-empty">어제 입실 객실이 없거나<br>아직 데이터가 갱신되지 않았습니다<br><span style="font-size:11px;color:#4b5180">오전 9시 이후 자동 표시됩니다</span></div>';
-    return;
-  }
-
-  waitSec.style.display = waiting.length ? 'block' : 'none';
-  readySec.style.display = ready.length  ? 'block' : 'none';
-
-  waitGrid.innerHTML = waiting.map(r =>
-    `<div class="lug-card waiting">
-      <div class="lug-room">${r.room}</div>
-      <div class="lug-status">🟠 아직 투숙중</div>
-    </div>`
-  ).join('');
-
-  readyGrid.innerHTML = ready.map(r => {
-    const chk = luggageChecked[r.room];
-    const cls = chk === 'yes' ? 'checked-yes' : chk === 'no' ? 'checked-no' : 'ready';
-    return `<div class="lug-card ${cls}">
-      <div class="lug-room">${r.room}</div>
-      <div class="lug-status">🟢 퇴실완료</div>
-      <div class="lug-btns">
-        <button class="lug-btn yes${chk === 'yes' ? ' active' : ''}" onclick="setLuggage('${r.room}','yes')">짐있음</button>
-        <button class="lug-btn no${chk === 'no' ? ' active' : ''}" onclick="setLuggage('${r.room}','no')">없음</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function saveLuggageResults() {
-  const entries = Object.entries(luggageChecked);
-  if (!entries.length) { showToast('체크된 항목이 없습니다'); return; }
-  const date = new Date().toLocaleDateString('ko-KR');
-  const results = entries.map(([room, val]) => room + '=' + val).join(',');
-  try {
-    await fetch(API, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'action=luggage_check&date=' + encodeURIComponent(date) + '&results=' + encodeURIComponent(results)
-    });
-    showToast('짐체크 기록 저장 완료 ✓');
-  } catch (e) {
-    showToast('저장 오류 — 잠시 후 확인해주세요');
-  }
-}
-
 // ── 초기 로드 ──────────────────────────────
-initLuggageState();
 loadData();
 </script>
 </body>
