@@ -154,7 +154,7 @@ body { display: flex; flex-direction: column; }
 <div class="tab-bar">
   <div class="tab-btn active" data-tab="status" onclick="switchTab('status')">현황</div>
   <div class="tab-btn" data-tab="cleaning" onclick="switchTab('cleaning')">청소</div>
-  <div class="tab-btn" data-tab="reservation" onclick="switchTab('reservation')">예약</div>
+  <div class="tab-btn" data-tab="reservation" onclick="switchTab('reservation')">예약하기</div>
 </div>
 
 <!-- 컨텐츠 -->
@@ -163,7 +163,8 @@ body { display: flex; flex-direction: column; }
   <!-- 현황 탭 -->
   <div class="tab-panel active" id="tab-status">
     <div class="status-tabs" id="statusTabs">
-      <div class="status-tab active" data-status="occupied" onclick="selectStatusTab('occupied')">장기·재숙·입실</div>
+      <div class="status-tab active" data-status="all" onclick="selectStatusTab('all')">전체</div>
+      <div class="status-tab" data-status="occupied" onclick="selectStatusTab('occupied')">장기·재숙·입실</div>
       <div class="status-tab" data-status="vacant" onclick="selectStatusTab('vacant')">공실</div>
       <div class="status-tab" data-status="reserved" onclick="selectStatusTab('reserved')">예약</div>
     </div>
@@ -235,7 +236,7 @@ body { display: flex; flex-direction: column; }
 const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
 
 let allRooms = [];
-let currentStatusTab = 'occupied';
+let currentStatusTab = 'all';
 let selectedKind = '숙박';
 let selectedReserveRoom = null;
 let selectedCancelRoom = null;
@@ -334,6 +335,7 @@ function renderStatusTabs() {
 function selectStatusTab(s) { currentStatusTab = s; renderStatusTabs(); renderGrid(); }
 
 function getRoomsForTab(tab) {
+  if (tab === 'all')      return allRooms;
   if (tab === 'occupied') return allRooms.filter(r => r.type === 'long' || r.type === 'normal' || r.checkinLabel === '재숙');
   if (tab === 'vacant')   return allRooms.filter(r => r.type === 'empty' && r.checkinLabel !== '재숙' && !r.isReserved);
   if (tab === 'reserved') return allRooms.filter(r => r.isReserved);
