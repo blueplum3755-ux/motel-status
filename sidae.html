@@ -115,10 +115,22 @@ body { display: flex; flex-direction: column; }
 /* ── 설정 탭 ── */
 .settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
 .settings-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-.manage-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; min-height: 20px; }
-.manage-chip { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 13px; color: var(--text); }
-.manage-chip .chip-del { background: none; border: none; color: var(--text-sub); font-size: 16px; cursor: pointer; padding: 0; line-height: 1; }
+.manage-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface2); font-size: 12px; color: var(--text); }
+.manage-chip .chip-del { background: none; border: none; color: var(--text-sub); font-size: 14px; cursor: pointer; padding: 0; line-height: 1; }
 .manage-chip .chip-del:active { color: #f87171; }
+/* 업체·팀 계층 구조 */
+.vendor-block { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; background: var(--bg); }
+.vendor-block-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.vendor-block-name { font-size: 15px; font-weight: 700; }
+.team-area { padding-left: 10px; border-left: 2px solid var(--border); }
+.team-chip-row { display: flex; flex-wrap: wrap; gap: 6px; min-height: 16px; margin-bottom: 6px; }
+.team-none { font-size: 11px; color: #3a3f60; font-style: italic; }
+.team-add-row { display: flex; gap: 6px; align-items: center; }
+.team-add-row input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 6px 8px; font-size: 13px; outline: none; }
+.team-add-row input:focus { border-color: var(--accent); }
+.team-add-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-sub); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.team-add-btn:active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* 품목 관리 */
 .menu-manage-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .menu-manage-item:last-child { border-bottom: none; }
 .menu-manage-name { font-size: 14px; font-weight: 600; }
@@ -188,8 +200,8 @@ body { display: flex; flex-direction: column; }
         <div class="chip-grid" id="vendorChips"></div>
       </div>
 
-      <div class="form-section">
-        <label class="form-label">팀</label>
+      <div class="form-section" id="teamSection" style="display:none">
+        <label class="form-label">팀 <span id="teamSectionVendor" style="color:var(--accent)"></span></label>
         <div class="chip-grid" id="teamChips"></div>
       </div>
 
@@ -269,20 +281,11 @@ body { display: flex; flex-direction: column; }
     <div class="scroll-area">
 
       <div class="settings-section">
-        <div class="settings-title">🏪 업체 관리</div>
-        <div class="manage-list" id="vendorManageList"></div>
+        <div class="settings-title">🏪 업체 · 팀 관리</div>
+        <div id="vendorManageList"></div>
         <div class="add-row">
           <input class="form-input" id="newVendorInput" placeholder="업체명 입력">
           <button class="add-btn" onclick="addVendor()">추가</button>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-title">👥 팀 관리</div>
-        <div class="manage-list" id="teamManageList"></div>
-        <div class="add-row">
-          <input class="form-input" id="newTeamInput" placeholder="팀명 입력">
-          <button class="add-btn" onclick="addTeam()">추가</button>
         </div>
       </div>
 
@@ -323,12 +326,19 @@ let selectedTeam   = '';
 let selectedMenus  = {};   // { menuName: { price, qty } }
 
 // ── localStorage 헬퍼 ────────────────────────
-function getVendors() { return JSON.parse(localStorage.getItem('sd_vendors') || '[]'); }
-function getTeams()   { return JSON.parse(localStorage.getItem('sd_teams')   || '[]'); }
-function getMenus()   { return JSON.parse(localStorage.getItem('sd_menus')   || '[]'); }
+// vendors: [{name, teams:[]}] 구조
+function getVendors() {
+  var raw = JSON.parse(localStorage.getItem('sd_vendors') || '[]');
+  // 구버전 마이그레이션 (string[] → object[])
+  if (raw.length && typeof raw[0] === 'string') {
+    raw = raw.map(function(n){ return { name: n, teams: [] }; });
+    saveVendors(raw);
+  }
+  return raw;
+}
 function saveVendors(v) { localStorage.setItem('sd_vendors', JSON.stringify(v)); }
-function saveTeams(t)   { localStorage.setItem('sd_teams',   JSON.stringify(t)); }
-function saveMenus(m)   { localStorage.setItem('sd_menus',   JSON.stringify(m)); }
+function getMenus()   { return JSON.parse(localStorage.getItem('sd_menus') || '[]'); }
+function saveMenus(m) { localStorage.setItem('sd_menus', JSON.stringify(m)); }
 
 // ── 초기화 ───────────────────────────────────
 function init() {
@@ -401,18 +411,22 @@ function renderInputChips() {
     vGrid.innerHTML = '<span class="chip-empty">⚙ 설정 탭에서 업체를 등록해주세요</span>';
   } else {
     vGrid.innerHTML = vendors.map(function(v) {
-      var sel = v === selectedVendor ? ' selected' : '';
-      return '<div class="chip' + sel + '" onclick="selectVendor(\'' + esc(v) + '\')">' + v + '</div>';
+      var sel = v.name === selectedVendor ? ' selected' : '';
+      return '<div class="chip' + sel + '" onclick="selectVendor(\'' + esc(v.name) + '\')">' + v.name + '</div>';
     }).join('');
   }
 
-  // 팀 칩
-  var teams = getTeams();
-  var tGrid = document.getElementById('teamChips');
-  if (!teams.length) {
-    tGrid.innerHTML = '<span class="chip-empty">⚙ 설정 탭에서 팀을 등록해주세요</span>';
+  // 팀 칩 — 선택된 업체의 팀만 표시
+  var tSection = document.getElementById('teamSection');
+  var tGrid    = document.getElementById('teamChips');
+  var vObj     = vendors.find(function(v){ return v.name === selectedVendor; });
+  if (!selectedVendor || !vObj || !vObj.teams.length) {
+    tSection.style.display = 'none';
+    selectedTeam = '';  // 업체 바뀌면 팀 초기화
   } else {
-    tGrid.innerHTML = teams.map(function(t) {
+    tSection.style.display = 'block';
+    document.getElementById('teamSectionVendor').textContent = '— ' + selectedVendor;
+    tGrid.innerHTML = vObj.teams.map(function(t) {
       var sel = t === selectedTeam ? ' selected' : '';
       return '<div class="chip' + sel + '" onclick="selectTeam(\'' + esc(t) + '\')">' + t + '</div>';
     }).join('');
@@ -454,7 +468,8 @@ function renderInputChips() {
 
 // ── 선택 ─────────────────────────────────────
 function selectVendor(v) {
-  selectedVendor = (selectedVendor === v) ? '' : v;
+  if (selectedVendor === v) { selectedVendor = ''; selectedTeam = ''; }
+  else { selectedVendor = v; selectedTeam = ''; }
   renderInputChips();
 }
 function selectTeam(t) {
@@ -545,8 +560,12 @@ function renderLedgerFilters() {
   var curT = document.getElementById('filterTeam').value;
   document.getElementById('filterVendor').innerHTML = '<option value="">전체 업체</option>'
     + vendors.map(function(v){ return '<option value="'+v+'"'+(v===curV?' selected':'')+'>'+v+'</option>'; }).join('');
+  // 팀 필터: 업체 선택 시 해당 업체 팀만
+  var teamsForFilter = curV
+    ? [...new Set(records.filter(function(r){ return r.vendor===curV&&r.team; }).map(function(r){ return r.team; }))].sort()
+    : teams;
   document.getElementById('filterTeam').innerHTML = '<option value="">전체 팀</option>'
-    + teams.map(function(t){ return '<option value="'+t+'"'+(t===curT?' selected':'')+'>'+t+'</option>'; }).join('');
+    + teamsForFilter.map(function(t){ return '<option value="'+t+'"'+(t===curT?' selected':'')+'>'+t+'</option>'; }).join('');
 }
 
 // ── 장부 렌더 ────────────────────────────────
@@ -663,23 +682,31 @@ function downloadExcel() {
 
 // ── 설정 탭 ──────────────────────────────────
 function renderSettings() {
-  // 업체 목록
+  // 업체·팀 목록 (계층 구조)
   var vendors = getVendors();
   document.getElementById('vendorManageList').innerHTML = vendors.length
-    ? vendors.map(function(v){
-        return '<div class="manage-chip">'+v
-          +'<button class="chip-del" onclick="removeVendor(\''+esc(v)+'\')">×</button></div>';
+    ? vendors.map(function(v, vi) {
+        var teamHtml = v.teams.length
+          ? v.teams.map(function(t, ti){
+              return '<div class="manage-chip">' + t
+                + '<button class="chip-del" onclick="removeTeamFromVendor('+vi+','+ti+')">×</button></div>';
+            }).join('')
+          : '<span class="team-none">(팀 없음)</span>';
+        return '<div class="vendor-block">'
+          + '<div class="vendor-block-header">'
+          +   '<div class="vendor-block-name">' + v.name + '</div>'
+          +   '<button class="del-btn" onclick="removeVendor('+vi+')" style="color:#3a3f60">×</button>'
+          + '</div>'
+          + '<div class="team-area">'
+          +   '<div class="team-chip-row">' + teamHtml + '</div>'
+          +   '<div class="team-add-row">'
+          +     '<input id="newTeam_'+vi+'" placeholder="팀명 입력" onkeydown="if(event.key===\'Enter\')addTeamToVendor('+vi+')">'
+          +     '<button class="team-add-btn" onclick="addTeamToVendor('+vi+')">+ 팀 추가</button>'
+          +   '</div>'
+          + '</div>'
+          + '</div>';
       }).join('')
-    : '<span style="font-size:12px;color:var(--text-sub)">등록된 업체 없음</span>';
-
-  // 팀 목록
-  var teams = getTeams();
-  document.getElementById('teamManageList').innerHTML = teams.length
-    ? teams.map(function(t){
-        return '<div class="manage-chip">'+t
-          +'<button class="chip-del" onclick="removeTeam(\''+esc(t)+'\')">×</button></div>';
-      }).join('')
-    : '<span style="font-size:12px;color:var(--text-sub)">등록된 팀 없음</span>';
+    : '<div style="font-size:12px;color:var(--text-sub);padding:8px 0">등록된 업체 없음</div>';
 
   // 품목 목록
   var menus = getMenus();
@@ -696,39 +723,44 @@ function renderSettings() {
 }
 
 function addVendor() {
-  var v = document.getElementById('newVendorInput').value.trim();
-  if (!v) return;
+  var n = document.getElementById('newVendorInput').value.trim();
+  if (!n) return;
   var vendors = getVendors();
-  if (vendors.includes(v)) { showToast('이미 등록된 업체입니다'); return; }
-  vendors.push(v);
+  if (vendors.find(function(v){ return v.name===n; })) { showToast('이미 등록된 업체입니다'); return; }
+  vendors.push({ name: n, teams: [] });
   saveVendors(vendors);
   document.getElementById('newVendorInput').value = '';
   renderSettings();
   renderInputChips();
 }
-function removeVendor(v) {
-  var vendors = getVendors().filter(function(x){ return x!==v; });
+function removeVendor(idx) {
+  var vendors = getVendors();
+  var removed = vendors.splice(idx, 1)[0];
   saveVendors(vendors);
-  if (selectedVendor === v) selectedVendor = '';
+  if (removed && selectedVendor === removed.name) { selectedVendor = ''; selectedTeam = ''; }
   renderSettings();
   renderInputChips();
 }
 
-function addTeam() {
-  var t = document.getElementById('newTeamInput').value.trim();
+function addTeamToVendor(vi) {
+  var input = document.getElementById('newTeam_'+vi);
+  if (!input) return;
+  var t = input.value.trim();
   if (!t) return;
-  var teams = getTeams();
-  if (teams.includes(t)) { showToast('이미 등록된 팀입니다'); return; }
-  teams.push(t);
-  saveTeams(teams);
-  document.getElementById('newTeamInput').value = '';
+  var vendors = getVendors();
+  if (!vendors[vi]) return;
+  if (vendors[vi].teams.includes(t)) { showToast('이미 등록된 팀입니다'); return; }
+  vendors[vi].teams.push(t);
+  saveVendors(vendors);
   renderSettings();
   renderInputChips();
 }
-function removeTeam(t) {
-  var teams = getTeams().filter(function(x){ return x!==t; });
-  saveTeams(teams);
-  if (selectedTeam === t) selectedTeam = '';
+function removeTeamFromVendor(vi, ti) {
+  var vendors = getVendors();
+  if (!vendors[vi]) return;
+  var removed = vendors[vi].teams.splice(ti, 1)[0];
+  saveVendors(vendors);
+  if (removed && selectedTeam === removed) selectedTeam = '';
   renderSettings();
   renderInputChips();
 }
