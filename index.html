@@ -6,13 +6,13 @@
 <title>객실 현황</title>
 <style>
 :root {
-  --bg: #0f1117;
-  --surface: #1a1d27;
-  --surface2: #222536;
-  --border: #2d3148;
-  --text: #e8eaf0;
-  --text-sub: #7b80a0;
-  --accent: #6c7aff;
+  --bg: #f2f4f8;
+  --surface: #ffffff;
+  --surface2: #f0f2f7;
+  --border: #dde1ec;
+  --text: #1a1d2e;
+  --text-sub: #7880a0;
+  --accent: #4f5de8;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); overflow: hidden; }
@@ -22,7 +22,7 @@ body { display: flex; flex-direction: column; }
 .header { flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; }
 .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
 .available-badge { display: flex; align-items: baseline; gap: 6px; }
-.available-num { font-size: 36px; font-weight: 800; color: #4ade80; line-height: 1; }
+.available-num { font-size: 36px; font-weight: 800; color: #16a34a; line-height: 1; }
 .available-label { font-size: 13px; color: var(--text-sub); }
 .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
@@ -53,31 +53,31 @@ body { display: flex; flex-direction: column; }
 @media (min-width: 768px) { .room-grid { grid-template-columns: repeat(5, 1fr); } }
 
 .room-card { border-radius: 12px; border: 1px solid; padding: 10px 8px; min-height: 78px; display: flex; flex-direction: column; gap: 3px; position: relative; }
-.room-card.vacant   { background: #0d2b1a; border-color: #1a5c35; }
-.room-card.dirty    { background: #2b1500; border-color: #5c3500; }
-.room-card.stay     { background: #0d1b3b; border-color: #1e3a7a; }
-.room-card.long     { background: #2b0d0d; border-color: #5c1a1a; }
-.room-card.reserved { background: #1f1a00; border-color: #5c4e00; }
-.room-card.luggage  { background: #1a0d2b; border-color: #3d1a5c; }
+.room-card.vacant   { background: #e8faf0; border-color: #86efac; }
+.room-card.dirty    { background: #fff4e8; border-color: #fdba74; }
+.room-card.stay     { background: #e8f0ff; border-color: #93c5fd; }
+.room-card.long     { background: #fde8e8; border-color: #fca5a5; }
+.room-card.reserved { background: #fefce8; border-color: #fde047; }
+.room-card.luggage  { background: #f4e8ff; border-color: #d8b4fe; }
 
 .room-number { font-size: 18px; font-weight: 700; line-height: 1; }
-.room-card.vacant   .room-number { color: #4ade80; }
-.room-card.dirty    .room-number { color: #fb923c; }
-.room-card.stay     .room-number { color: #60a5fa; }
-.room-card.long     .room-number { color: #f87171; }
-.room-card.reserved .room-number { color: #fcd34d; }
-.room-card.luggage  .room-number { color: #c084fc; }
+.room-card.vacant   .room-number { color: #16a34a; }
+.room-card.dirty    .room-number { color: #ea580c; }
+.room-card.stay     .room-number { color: #2563eb; }
+.room-card.long     .room-number { color: #dc2626; }
+.room-card.reserved .room-number { color: #ca8a04; }
+.room-card.luggage  .room-number { color: #9333ea; }
 
 .room-status { font-size: 11px; font-weight: 600; }
-.room-card.vacant   .room-status { color: #4ade80; }
-.room-card.dirty    .room-status { color: #fb923c; }
-.room-card.stay     .room-status { color: #60a5fa; }
-.room-card.long     .room-status { color: #f87171; }
-.room-card.reserved .room-status { color: #fcd34d; }
-.room-card.luggage  .room-status { color: #c084fc; }
+.room-card.vacant   .room-status { color: #16a34a; }
+.room-card.dirty    .room-status { color: #ea580c; }
+.room-card.stay     .room-status { color: #2563eb; }
+.room-card.long     .room-status { color: #dc2626; }
+.room-card.reserved .room-status { color: #ca8a04; }
+.room-card.luggage  .room-status { color: #9333ea; }
 
 .room-sub { font-size: 10px; color: var(--text-sub); }
-.occupied-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 5px #4ade80; }
+.occupied-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 5px #86efac; }
 
 /* ── 청소 탭 ── */
 .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -87,17 +87,17 @@ body { display: flex; flex-direction: column; }
 .clean-room { font-size: 16px; font-weight: 700; }
 .clean-info { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
 .clean-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
-.badge-need { background: #3d1500; color: #fb923c; }
-.badge-done { background: #002d1a; color: #4ade80; }
+.badge-need { background: #fff4e8; color: #ea580c; }
+.badge-done { background: #e8faf0; color: #16a34a; }
 
 /* ── 예약 탭 ── */
 .reserve-actions { display: flex; gap: 10px; padding: 12px 16px; flex-shrink: 0; }
 .btn-reserve { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.btn-reserve.primary { background: #1a3a5c; color: #60a5fa; }
-.btn-reserve.danger  { background: #3b0d0d; color: #f87171; }
+.btn-reserve.primary { background: #dbeafe; color: #2563eb; }
+.btn-reserve.danger  { background: #fee2e2; color: #dc2626; }
 .reservation-list { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; }
-.reservation-item { background: var(--surface); border: 1px solid #5c4e00; border-radius: 10px; padding: 12px 14px; }
-.reservation-room { font-size: 16px; font-weight: 700; color: #fcd34d; }
+.reservation-item { background: var(--surface); border: 1px solid #fde047; border-radius: 10px; padding: 12px 14px; }
+.reservation-room { font-size: 16px; font-weight: 700; color: #ca8a04; }
 .reservation-info { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 14px; }
 
@@ -111,10 +111,10 @@ body { display: flex; flex-direction: column; }
 .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; text-align: center; }
 .modal-room-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; max-height: 180px; overflow-y: auto; }
 .modal-room-btn { padding: 10px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; }
-.modal-room-btn.selected { border-color: var(--accent); background: #1a1d40; color: var(--accent); }
+.modal-room-btn.selected { border-color: var(--accent); background: #e0e3ff; color: var(--accent); }
 .kind-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .kind-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; }
-.kind-btn.selected { border-color: var(--accent); background: #1a1d40; color: var(--accent); }
+.kind-btn.selected { border-color: var(--accent); background: #e0e3ff; color: var(--accent); }
 .modal-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 12px; font-size: 14px; margin-bottom: 10px; outline: none; }
 .modal-input:focus { border-color: var(--accent); }
 .modal-input::placeholder { color: var(--text-sub); }
@@ -124,7 +124,7 @@ body { display: flex; flex-direction: column; }
 .btn-confirm.danger { background: #c0392b; }
 
 /* ── 토스트 ── */
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 200; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1d2e; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 200; transition: transform 0.25s; white-space: nowrap; border: 1px solid #3a3f5c; pointer-events: none; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
