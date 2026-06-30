@@ -80,13 +80,18 @@ body { display: flex; flex-direction: column; }
 .occupied-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 5px #4ade80; }
 
 /* ── 청소 탭 ── */
-.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.section-title { font-size: 12px; font-weight: 600; color: var(--text-sub); letter-spacing: 0.04em; padding: 14px 16px 6px; }
-.clean-list { padding: 0 12px 4px; display: flex; flex-direction: column; gap: 6px; }
-.clean-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
-.clean-room { font-size: 16px; font-weight: 700; }
-.clean-info { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-.clean-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px; }
+.section-title { font-size: 12px; font-weight: 600; color: var(--text-sub); letter-spacing: 0.04em; padding: 6px 2px 8px; }
+.clean-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+@media (min-width: 480px) { .clean-grid { grid-template-columns: repeat(4, 1fr); } }
+.clean-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; }
+.clean-card.need { border-color: #5c3500; background: #1a0e00; }
+.clean-card.done { border-color: #1a5c35; background: #001a0d; }
+.clean-room { font-size: 20px; font-weight: 700; }
+.clean-card.need .clean-room { color: #fb923c; }
+.clean-card.done .clean-room { color: #4ade80; }
+.clean-info { font-size: 11px; color: var(--text-sub); }
+.clean-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; align-self: flex-start; }
 .badge-need { background: #3d1500; color: #fb923c; }
 .badge-done { background: #002d1a; color: #4ade80; }
 
@@ -173,9 +178,9 @@ body { display: flex; flex-direction: column; }
   <div class="tab-panel" id="tab-cleaning">
     <div class="scroll-area">
       <div class="section-title">청소 필요</div>
-      <div class="clean-list" id="cleanNeedList"></div>
+      <div class="clean-grid" id="cleanNeedList"></div>
       <div class="section-title">청소 완료</div>
-      <div class="clean-list" id="cleanDoneList"></div>
+      <div class="clean-grid" id="cleanDoneList"></div>
     </div>
   </div>
 
@@ -362,21 +367,19 @@ function renderCleaning() {
   const done = allRooms.filter(r => !r.needsClean && r.rawCleaningEndTime);
 
   document.getElementById('cleanNeedList').innerHTML = need.length
-    ? need.map(r => `<div class="clean-item">
-        <div>
-          <div class="clean-room">${r.room}호</div>
-          <div class="clean-info">${r.checkinLabel || ''} ${r.checkoutTime ? '퇴실 ' + r.checkoutTime : ''}</div>
-        </div>
+    ? need.map(r => `<div class="clean-card need">
+        <div class="clean-room">${r.room}호</div>
+        <div class="clean-info">${r.checkinLabel || ''}${r.checkoutTime ? ' ' + r.checkoutTime : ''}</div>
         <span class="clean-badge badge-need">청소필요</span>
       </div>`).join('')
-    : '<div class="empty-state">청소 필요 없음 ✓</div>';
+    : '<div class="empty-state" style="grid-column:1/-1">청소 필요 없음 ✓</div>';
 
   document.getElementById('cleanDoneList').innerHTML = done.length
-    ? done.map(r => `<div class="clean-item">
-        <div><div class="clean-room">${r.room}호</div></div>
+    ? done.map(r => `<div class="clean-card done">
+        <div class="clean-room">${r.room}호</div>
         <span class="clean-badge badge-done">완료</span>
       </div>`).join('')
-    : '<div class="empty-state">청소 완료 내역 없음</div>';
+    : '<div class="empty-state" style="grid-column:1/-1">청소 완료 내역 없음</div>';
 }
 
 function renderReservations() {
