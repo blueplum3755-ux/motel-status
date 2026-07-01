@@ -205,21 +205,27 @@ body { display: flex; flex-direction: column; }
 .lt-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
 
 /* 장기 객실 그리드 */
-.lt-room-card { background: #1c1609; border: 1.5px solid #3d3218; border-radius: 12px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.15s; min-height: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-.lt-room-card:active { transform: scale(0.93); }
-.lt-room-card.empty { opacity: 0.45; }
-.lt-room-card.unpaid { border-color: #d97706; background: #1e1508; }
-.lt-room-card.paid   { border-color: #16a34a; background: #0e1f0e; }
-.lt-room-card.expired{ border-color: #504030; background: #180f04; opacity: 0.6; }
-.lt-room-num  { font-size: 15px; font-weight: 700; color: #f0e6d0; }
-.lt-room-client { font-size: 10px; color: #d97706; font-weight: 700; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lt-room-days { font-size: 11px; color: #fbbf24; font-weight: 700; }
-.lt-room-status { font-size: 11px; color: #6b5030; }
+.lt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.lt-room-card { background: #1c1609; border: 1.5px solid #3d3218; border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; gap: 5px; }
+.lt-room-card:active { transform: scale(0.97); opacity: 0.85; }
+.lt-room-card.unpaid  { border-color: #d97706; background: #1e1508; }
+.lt-room-card.paid    { border-color: #16a34a; background: #0a1a0a; }
+.lt-room-card.partial { border-color: #ca8a04; background: #1c1508; }
+.lt-room-card.expired { border-color: #504030; background: #180f04; opacity: 0.65; }
+.lt-card-header { display: flex; justify-content: space-between; align-items: center; }
+.lt-room-num { font-size: 16px; font-weight: 800; color: #f0e6d0; }
+.lt-room-client { font-size: 12px; color: #d97706; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-card-stats { display: flex; justify-content: space-between; font-size: 11px; color: #fbbf24; font-weight: 700; }
+.lt-card-price { font-size: 11px; color: #a08050; }
+.lt-card-checks { display: flex; gap: 5px; flex-wrap: wrap; padding-top: 2px; border-top: 1px solid #3d3218; }
+.lt-check-item { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
+.lt-check-item.done    { background: #052e16; color: #4ade80; }
+.lt-check-item.pending { background: #2a1006; color: #d97706; }
 .expired-text { color: #6b5030 !important; }
-.lt-pay-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-top: 1px; }
+.lt-pay-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
 .lt-pay-badge.done    { background: #052e16; color: #4ade80; }
 .lt-pay-badge.partial { background: #2d1a00; color: #fbbf24; }
-.lt-pay-badge.pending { background: #1f1108; color: #d97706; }
+.lt-pay-badge.pending { background: #1f1108; color: #f87171; }
 
 /* 계약 목록 아이템 */
 .lt-list-item { background: #1c1609; border: 1px solid #3d3218; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
