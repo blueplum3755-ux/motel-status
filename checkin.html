@@ -838,7 +838,7 @@ function addClient() {
   var n=document.getElementById('newClientName').value.trim();
   var t=document.getElementById('newClientTeam').value.trim();
   if (!n){ showToast('업체명을 입력해주세요'); return; }
-  if (clients.find(function(c){ return c.name===n; })){ showToast('이미 등록된 업체입니다'); return; }
+  if (clients.find(function(c){ return c.name===n && (c.team||'')===(t||''); })){ showToast('이미 등록된 업체입니다'); return; }
   var entry={ name:n };
   if (t) entry.team=t;
   clients.push(entry);
