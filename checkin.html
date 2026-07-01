@@ -579,27 +579,54 @@ function selectModalClient(name) {
   renderModalChips(); renderModalPrices(); renderModalTotal();
 }
 
+// ── 객실별 요금표 ────────────────────────────────────
+var ROOM_PRICES = (function() {
+  var map = {};
+  // 201~213호, 301호
+  [201,202,203,204,205,206,207,208,209,210,211,212,213,301].forEach(function(r){
+    map[String(r)] = [40000, 50000];
+  });
+  // 302~304호, 306~309호
+  [302,303,304,306,307,308,309].forEach(function(r){
+    map[String(r)] = [40000, 50000, 60000];
+  });
+  // 305호, 310호
+  [305,310].forEach(function(r){
+    map[String(r)] = [50000, 60000, 70000];
+  });
+  // 501~504호, 506~509호
+  [501,502,503,504,506,507,508,509].forEach(function(r){
+    map[String(r)] = [50000, 60000, 70000];
+  });
+  // 505호, 510호
+  [505,510].forEach(function(r){
+    map[String(r)] = [55000, 60000, 70000];
+  });
+  return map;
+})();
+
+function getRoomPrices(roomNum) {
+  return ROOM_PRICES[String(roomNum)] || [40000, 50000];
+}
+
 // ── 모달: 요금 버튼 ──────────────────────────────────
 function renderModalPrices() {
-  // 등록된 고객들의 단가 목록 (중복 제거)
-  var priceSet={};
-  clients.forEach(function(c){ if(c.price) priceSet[c.price]=true; });
-  var prices=Object.keys(priceSet).map(Number).sort(function(a,b){return a-b;});
+  var prices = getRoomPrices(modal.roomNum);
 
-  var btns=prices.map(function(p){
-    var sel=!modal.directPrice && p===modal.price;
+  var btns = prices.map(function(p) {
+    var sel = !modal.directPrice && p === modal.price;
     return '<button class="price-btn'+(sel?' selected':'')+'" onclick="setModalPrice('+p+')">'+fmt(p)+'</button>';
   });
   btns.push('<button class="price-btn'+(modal.directPrice?' selected':'')+'" onclick="toggleDirectPrice()">직접입력</button>');
-  document.getElementById('modalPriceBtns').innerHTML=btns.join('');
+  document.getElementById('modalPriceBtns').innerHTML = btns.join('');
 
-  var dw=document.getElementById('priceDirectWrap');
+  var dw = document.getElementById('priceDirectWrap');
   if (modal.directPrice) {
-    dw.style.display='block';
-    document.getElementById('priceDirectInput').value=modal.price||'';
-    setTimeout(function(){ document.getElementById('priceDirectInput').focus(); },50);
+    dw.style.display = 'block';
+    document.getElementById('priceDirectInput').value = modal.price || '';
+    setTimeout(function(){ document.getElementById('priceDirectInput').focus(); }, 50);
   } else {
-    dw.style.display='none';
+    dw.style.display = 'none';
   }
 }
 
