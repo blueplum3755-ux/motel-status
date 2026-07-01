@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>입실체크</title>
+<title>일일·장기 입실체크</title>
 <style>
 :root {
   --bg: #0f1117; --surface: #1a1d27; --surface2: #222536;
@@ -185,6 +185,89 @@ body { display: flex; flex-direction: column; }
 .명세서-total { text-align: right; margin-top: 12px; font-size: 15px; font-weight: bold; }
 @media print { .print-close, .print-action { display: none !important; } }
 
+/* ── 그룹 탭 ── */
+.group-tab-bar { flex-shrink: 0; display: flex; background: #0a0c13; border-bottom: 3px solid #1e2235; }
+.group-tab-btn { flex: 1; padding: 13px 0; text-align: center; font-size: 14px; font-weight: 800; color: #4a4f70; cursor: pointer; letter-spacing: 0.02em; border-bottom: 3px solid transparent; margin-bottom: -3px; }
+.group-tab-btn.active.daily   { color: #a5b4fc; border-bottom-color: #6c7aff; }
+.group-tab-btn.active.longterm{ color: #fbbf24; border-bottom-color: #d97706; }
+#group-daily, #group-longterm { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── 장기입실 테마 ── */
+.lt-root { --lt-bg:#100c05; --lt-surface:#1c1609; --lt-surface2:#261e0c; --lt-border:#3d3218; --lt-accent:#d97706; --lt-text:#f0e6d0; --lt-sub:#a08050; }
+#group-longterm { background: #100c05; color: #f0e6d0; }
+
+.lt-sub-tab-bar { flex-shrink: 0; display: flex; background: #170f04; border-bottom: 1px solid #3d3218; }
+.lt-tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 700; color: #6b5030; cursor: pointer; border-bottom: 2px solid transparent; }
+.lt-tab-btn.active { color: #fbbf24; border-bottom-color: #d97706; }
+
+.lt-panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.lt-panel.active { display: flex; }
+.lt-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+
+/* 장기 객실 그리드 */
+.lt-room-card { background: #1c1609; border: 1.5px solid #3d3218; border-radius: 12px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.15s; min-height: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.lt-room-card:active { transform: scale(0.93); }
+.lt-room-card.empty { opacity: 0.45; }
+.lt-room-card.unpaid { border-color: #d97706; background: #1e1508; }
+.lt-room-card.paid   { border-color: #16a34a; background: #0e1f0e; }
+.lt-room-card.expired{ border-color: #504030; background: #180f04; opacity: 0.6; }
+.lt-room-num  { font-size: 15px; font-weight: 700; color: #f0e6d0; }
+.lt-room-client { font-size: 10px; color: #d97706; font-weight: 700; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-room-days { font-size: 11px; color: #fbbf24; font-weight: 700; }
+.lt-room-status { font-size: 11px; color: #6b5030; }
+.expired-text { color: #6b5030 !important; }
+.lt-pay-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-top: 1px; }
+.lt-pay-badge.done    { background: #052e16; color: #4ade80; }
+.lt-pay-badge.partial { background: #2d1a00; color: #fbbf24; }
+.lt-pay-badge.pending { background: #1f1108; color: #d97706; }
+
+/* 계약 목록 아이템 */
+.lt-list-item { background: #1c1609; border: 1px solid #3d3218; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+.lt-list-item:active { opacity: 0.8; }
+
+/* 신규 계약 버튼 */
+.lt-new-btn { flex-shrink: 0; margin: 0 14px 14px; padding: 14px; background: #2a1a06; border: 1.5px solid #d97706; border-radius: 12px; color: #fbbf24; font-size: 15px; font-weight: 800; cursor: pointer; text-align: center; }
+.lt-new-btn:active { background: #3d2a0e; }
+
+/* 장기 모달 */
+.lt-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; }
+.lt-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1609; border-radius: 20px 20px 0 0; padding: 20px 16px 36px; z-index: 201; display: none; max-height: 92vh; overflow-y: auto; border-top: 2px solid #d97706; }
+.lt-sec-label { font-size: 11px; font-weight: 700; color: #a08050; letter-spacing: 0.05em; margin-bottom: 8px; }
+.lt-section { margin-bottom: 16px; }
+.lt-input { width: 100%; background: #261e0c; border: 1px solid #3d3218; border-radius: 8px; color: #f0e6d0; padding: 10px 12px; font-size: 15px; outline: none; }
+.lt-input:focus { border-color: #d97706; }
+.lt-row2 { display: flex; gap: 8px; }
+.lt-row2 > * { flex: 1; }
+
+/* 객실 칩 */
+.lt-room-chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 110px; overflow-y: auto; }
+.lt-room-chip { padding: 6px 10px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #a08050; font-size: 13px; font-weight: 700; cursor: pointer; }
+.lt-room-chip.selected { border-color: #d97706; background: #3d2a0e; color: #fbbf24; }
+
+/* 고객 칩 */
+.lt-client-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.lt-client-chip { padding: 8px 14px; border-radius: 20px; border: 1.5px solid #3d3218; background: #261e0c; color: #a08050; font-size: 13px; font-weight: 600; cursor: pointer; }
+.lt-client-chip.selected { border-color: #d97706; background: #3d2a0e; color: #fbbf24; }
+
+/* 지급방법 */
+.lt-pay-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.lt-pay-btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #a08050; font-size: 13px; font-weight: 600; cursor: pointer; }
+.lt-pay-btn.selected { border-color: #d97706; background: #3d2a0e; color: #fbbf24; }
+
+/* 체크리스트 */
+.lt-check-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #f0e6d0; padding: 6px 0; cursor: pointer; }
+.lt-check-label input[type=checkbox] { width: 18px; height: 18px; accent-color: #d97706; }
+.lt-done-badge { display: inline-block; background: #052e16; color: #4ade80; font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 20px; margin-top: 6px; }
+
+/* 환불 계산 */
+.lt-refund-box { background: #261e0c; border: 1px solid #3d3218; border-radius: 10px; padding: 12px; font-size: 13px; color: #fbbf24; white-space: pre-line; line-height: 1.7; }
+
+/* 모달 버튼 */
+.lt-btn-row { display: flex; gap: 10px; margin-top: 4px; }
+.lt-btn-del  { flex: 1; padding: 14px; border: 1px solid #5c1a1a; border-radius: 10px; background: #1a0909; color: #f87171; font-size: 14px; font-weight: 700; cursor: pointer; display: none; }
+.lt-btn-cancel { flex: 1; padding: 14px; border: 1px solid #3d3218; border-radius: 10px; background: #261e0c; color: #a08050; font-size: 15px; font-weight: 700; cursor: pointer; }
+.lt-btn-save { flex: 2; padding: 14px; border: none; border-radius: 10px; background: #d97706; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+
 /* ── 빈 상태 / 토스트 ── */
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 13px; line-height: 1.8; }
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 400; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
@@ -197,10 +280,19 @@ body { display: flex; flex-direction: column; }
 <div class="header">
   <div class="header-top">
     <a class="back-link" href="index.html">← 현황</a>
-    <div class="header-title">📋 입실체크</div>
+    <div class="header-title" id="headerTitle">📋 일일입실체크</div>
     <div class="header-stats" id="headerStats">기록 0건 · <b>0원</b></div>
   </div>
 </div>
+
+<!-- 그룹 탭 바 -->
+<div class="group-tab-bar">
+  <div class="group-tab-btn active daily"    data-tab="daily"    onclick="switchGroupTab('daily')">일일입실체크</div>
+  <div class="group-tab-btn longterm"        data-tab="longterm" onclick="switchGroupTab('longterm')">장기입실체크</div>
+</div>
+
+<!-- ── 일일입실체크 그룹 ── -->
+<div id="group-daily">
 
 <!-- 탭 바 -->
 <div class="tab-bar">
@@ -270,6 +362,23 @@ body { display: flex; flex-direction: column; }
   </div>
 
 </div>
+</div><!-- /group-daily -->
+
+<!-- ── 장기입실체크 그룹 ── -->
+<div id="group-longterm" class="lt-root" style="display:none">
+  <div class="lt-sub-tab-bar">
+    <div class="lt-tab-btn active" data-tab="grid" onclick="switchLtTab('grid')">객실 현황</div>
+    <div class="lt-tab-btn"       data-tab="list" onclick="switchLtTab('list')">계약 목록</div>
+    <div style="flex:none;padding:0 10px;font-size:10px;color:#a08050;align-self:center;white-space:nowrap" id="ltSyncStatus"></div>
+  </div>
+  <div class="lt-panel active" id="lt-panel-grid">
+    <div class="lt-scroll"><div id="ltRoomGrid"></div></div>
+    <div class="lt-new-btn" onclick="openLtModal(null,null)">＋ 신규 장기계약</div>
+  </div>
+  <div class="lt-panel" id="lt-panel-list">
+    <div class="lt-scroll" id="ltContractList"></div>
+  </div>
+</div>
 
 <!-- ── 객실 입력 모달 ── -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
@@ -312,6 +421,82 @@ body { display: flex; flex-direction: column; }
   <button class="print-close" onclick="closePrint()">✕ 닫기</button>
   <button class="print-action" onclick="window.print()">🖨 인쇄</button>
   <div id="printContent"></div>
+</div>
+
+<!-- ── 장기 계약 모달 ── -->
+<div class="lt-overlay" id="ltOverlay" onclick="closeLtModal()"></div>
+<div class="lt-sheet lt-root" id="ltSheet">
+  <div class="modal-header" style="margin-bottom:16px">
+    <div class="modal-title" id="ltModalTitle" style="color:#fbbf24">장기계약 등록</div>
+    <div style="font-size:12px;color:#a08050" id="ltContractId"></div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">객실 선택</div>
+    <div class="lt-room-chips" id="ltRoomChips"></div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">고객 선택</div>
+    <div class="lt-client-chips" id="ltClientChips"></div>
+    <div style="display:none;margin-top:8px" id="ltCustomClientWrap">
+      <input class="lt-input" id="ltCustomClient" placeholder="고객명 직접 입력">
+    </div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">계약 기간</div>
+    <div class="lt-row2">
+      <div>
+        <div style="font-size:10px;color:#a08050;margin-bottom:4px">입실일</div>
+        <input class="lt-input" type="date" id="ltStartDate" onchange="ltStartDateChange()">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#a08050;margin-bottom:4px">마감일</div>
+        <input class="lt-input" type="date" id="ltEndDate" onchange="ltModal.endDate=this.value">
+      </div>
+    </div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">금액</div>
+    <div class="lt-row2">
+      <div>
+        <div style="font-size:10px;color:#a08050;margin-bottom:4px">계약금액 (원)</div>
+        <input class="lt-input" type="number" id="ltContractPrice" placeholder="예: 600000" inputmode="numeric" oninput="renderLtRefund()">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#a08050;margin-bottom:4px">기본단가 (환불계산용)</div>
+        <input class="lt-input" type="number" id="ltBasePrice" placeholder="예: 50000" inputmode="numeric" oninput="renderLtRefund()">
+      </div>
+    </div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">지급방법</div>
+    <div class="lt-pay-btns" id="ltPayMethods"></div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">수납 확인</div>
+    <div id="ltChecklist"></div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">환불 계산</div>
+    <div class="lt-refund-box" id="ltRefundResult">계약금액과 기본단가를 입력하면 계산됩니다</div>
+  </div>
+
+  <div class="lt-section">
+    <div class="lt-sec-label">메모</div>
+    <input class="lt-input" id="ltMemo" placeholder="메모 (선택)">
+  </div>
+
+  <div class="lt-btn-row">
+    <button class="lt-btn-del"    id="ltDeleteBtn" onclick="deleteLtModal()">삭제</button>
+    <button class="lt-btn-cancel" onclick="closeLtModal()">취소</button>
+    <button class="lt-btn-save"   onclick="saveLtModal()">저장</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -868,6 +1053,318 @@ function showToast(msg) {
 }
 
 init();
+
+// ═══════════════════════════════════════════════════
+// 장기입실체크
+// ═══════════════════════════════════════════════════
+const LT_STORAGE = 'ci_longterm_v1';
+const LT_PAY_METHODS = ['현금선불','현금후불','카드선불','카드후불','세금계산서','입금대기'];
+
+// localStorage = 캐시, 서버 = 정본
+function ltCacheGet() { try { return JSON.parse(localStorage.getItem(LT_STORAGE)||'[]'); } catch(e){ return []; } }
+function ltCacheSet(arr) { try { localStorage.setItem(LT_STORAGE, JSON.stringify(arr)); } catch(e){} }
+function getLtContracts() { return ltCacheGet(); }
+
+async function ltSyncFromServer() {
+  ltSetStatus('불러오는 중...');
+  try {
+    var data = await fetchJsonp(API + '?action=longterm_get');
+    var arr = Array.isArray(data) ? data : [];
+    ltCacheSet(arr);
+    ltSetStatus('✓ 서버 동기화됨');
+    return arr;
+  } catch(e) {
+    ltSetStatus('⚠ 서버 연결 실패 (캐시 사용 중)');
+    return ltCacheGet();
+  }
+}
+
+async function ltSyncToServer(arr) {
+  ltCacheSet(arr);
+  ltSetStatus('저장 중...');
+  try {
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=longterm_save&contracts=' + encodeURIComponent(JSON.stringify(arr))
+    });
+    ltSetStatus('✓ 서버에 저장됨');
+  } catch(e) {
+    ltSetStatus('⚠ 서버 저장 실패 (로컬만 저장됨)');
+  }
+}
+
+function ltSetStatus(msg) {
+  var el = document.getElementById('ltSyncStatus');
+  if (el) el.textContent = msg;
+}
+
+var ltModal = {};
+
+// ── 그룹 탭 전환 ─────────────────────────────────────
+function switchGroupTab(tab) {
+  document.querySelectorAll('.group-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.querySelector('.group-tab-btn[data-tab="'+tab+'"]');
+  if (btn) btn.classList.add('active');
+  document.getElementById('group-daily').style.display    = tab === 'daily'    ? '' : 'none';
+  document.getElementById('group-longterm').style.display = tab === 'longterm' ? '' : 'none';
+  document.getElementById('headerTitle').textContent = tab === 'daily' ? '📋 일일입실체크' : '🏠 장기입실체크';
+  if (tab === 'longterm') { ltSyncFromServer().then(function(){ renderLtGrid(); }); }
+}
+
+// ── 장기 서브탭 전환 ─────────────────────────────────
+function switchLtTab(tab) {
+  document.querySelectorAll('.lt-tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===tab); });
+  document.querySelectorAll('.lt-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('lt-panel-'+tab).classList.add('active');
+  if (tab === 'list') renderLtList();
+  if (tab === 'grid') renderLtGrid();
+}
+
+// ── 유틸 ─────────────────────────────────────────────
+function fmtLt(n) { return (n||0).toLocaleString(); }
+
+function ltDayCount(startDate) {
+  var start = new Date(startDate);
+  var today = new Date(toDateStr(new Date()));
+  return Math.floor((today - start) / 86400000) + 1;
+}
+function isLtActive(c) {
+  var today = toDateStr(new Date());
+  return c.startDate <= today && c.endDate >= today;
+}
+function isLtExpired(c) { return c.endDate < toDateStr(new Date()); }
+
+function ltPayStatus(c) {
+  var needsBoth = c.payMethod === '세금계산서' || c.payMethod === '입금대기';
+  if (needsBoth) {
+    if (c.taxInvoiceDone && c.paymentDone) return 'done';
+    if (c.taxInvoiceDone || c.paymentDone) return 'partial';
+    return 'pending';
+  }
+  return c.paymentDone ? 'done' : 'pending';
+}
+
+// ── 객실 그리드 ──────────────────────────────────────
+function renderLtGrid() {
+  var contracts = getLtContracts();
+  var html = '';
+  Object.keys(FIXED_FLOORS).forEach(function(floor) {
+    html += '<div class="floor-section"><div class="floor-label">'+floor+'층</div><div class="room-grid">';
+    FIXED_FLOORS[floor].forEach(function(room) {
+      var today = toDateStr(new Date());
+      // 활성 계약 우선, 그 다음 최근 만기
+      var contract = contracts.find(function(c){ return c.room===room && c.startDate<=today && c.endDate>=today; });
+      if (!contract) contract = contracts.filter(function(c){ return c.room===room && c.endDate<today; })
+        .sort(function(a,b){ return b.endDate.localeCompare(a.endDate); })[0];
+      html += buildLtRoomCard(room, contract);
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('ltRoomGrid').innerHTML = html;
+}
+
+function buildLtRoomCard(room, contract) {
+  if (!contract) {
+    return '<div class="lt-room-card empty" onclick="openLtModal(null,\''+room+'\')"><div class="lt-room-num">'+room+'</div><div class="lt-room-status">공실</div></div>';
+  }
+  var active = isLtActive(contract);
+  var expired = isLtExpired(contract);
+  var ps = ltPayStatus(contract);
+  var cls = expired ? 'expired' : (ps==='done' ? 'paid' : 'unpaid');
+  var payLabel = ps==='done' ? '수납완료' : (ps==='partial' ? '처리중' : '미수납');
+  var days = ltDayCount(contract.startDate);
+  var shortClient = contract.client.length>7 ? contract.client.slice(0,7)+'…' : contract.client;
+  return '<div class="lt-room-card '+cls+'" onclick="openLtModal(\''+contract.id+'\',null)">'
+    +'<div class="lt-room-num">'+room+'</div>'
+    +'<div class="lt-room-client">'+shortClient+'</div>'
+    +(active ? '<div class="lt-room-days">'+days+'박째</div>' : '<div class="lt-room-days expired-text">만기</div>')
+    +'<div class="lt-pay-badge '+ps+'">'+payLabel+'</div>'
+    +'</div>';
+}
+
+// ── 계약 목록 ─────────────────────────────────────────
+function renderLtList() {
+  var contracts = getLtContracts().slice().sort(function(a,b){ return b.startDate.localeCompare(a.startDate); });
+  if (!contracts.length) {
+    document.getElementById('ltContractList').innerHTML = '<div class="empty-state" style="color:#a08050">계약 내역 없음</div>';
+    return;
+  }
+  document.getElementById('ltContractList').innerHTML = contracts.map(function(c) {
+    var ps = ltPayStatus(c);
+    var statusColor = isLtActive(c) ? '#4ade80' : (isLtExpired(c) ? '#6b5030' : '#fbbf24');
+    var statusText  = isLtActive(c) ? '진행중' : (isLtExpired(c) ? '만기' : '예정');
+    var payColor = ps==='done' ? '#4ade80' : (ps==='partial' ? '#fbbf24' : '#f87171');
+    var payText  = ps==='done' ? '수납완료' : (ps==='partial' ? '처리중' : '미수납');
+    return '<div class="lt-list-item" onclick="openLtModal(\''+c.id+'\',null)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      +'<span style="font-size:15px;font-weight:800;color:#f0e6d0">'+c.room+'호</span>'
+      +'<span style="font-size:11px;color:'+statusColor+';font-weight:700">'+statusText+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:#d97706;margin-bottom:2px">'+c.client+'</div>'
+      +'<div style="font-size:11px;color:#a08050">'+c.startDate+' ~ '+c.endDate+'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:6px">'
+      +'<span style="font-size:14px;font-weight:700;color:#fbbf24">'+fmtLt(c.contractPrice)+'원</span>'
+      +'<span style="font-size:12px;color:'+payColor+';font-weight:700">'+payText+'</span>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── 모달 열기/닫기 ────────────────────────────────────
+function openLtModal(id, preRoom) {
+  var contracts = getLtContracts();
+  var existing = id ? contracts.find(function(c){ return c.id===id; }) : null;
+  if (existing) {
+    ltModal = JSON.parse(JSON.stringify(existing));
+  } else {
+    var today = toDateStr(new Date());
+    var endD = new Date(today); endD.setDate(endD.getDate()+29);
+    ltModal = {
+      id: null, room: preRoom||'', client: clients.length===1 ? clientLabel(clients[0]) : '',
+      customClient: '', startDate: today, endDate: toDateStr(endD),
+      contractPrice: 0, basePrice: 0, payMethod: '현금선불',
+      taxInvoiceDone: false, paymentDone: false, memo: ''
+    };
+  }
+  renderLtModalFull();
+  document.getElementById('ltOverlay').style.display = 'block';
+  document.getElementById('ltSheet').style.display   = 'block';
+}
+
+function closeLtModal() {
+  document.getElementById('ltOverlay').style.display = 'none';
+  document.getElementById('ltSheet').style.display   = 'none';
+}
+
+function renderLtModalFull() {
+  var isEdit = !!ltModal.id;
+  document.getElementById('ltModalTitle').textContent = (ltModal.room||(isEdit?'':'신규')) + (ltModal.room?'호 ':'') + (isEdit?'계약 수정':'장기계약 등록');
+  document.getElementById('ltDeleteBtn').style.display = isEdit ? 'block' : 'none';
+  renderLtRoomChips();
+  renderLtClientChips();
+  document.getElementById('ltStartDate').value = ltModal.startDate;
+  document.getElementById('ltEndDate').value   = ltModal.endDate;
+  document.getElementById('ltContractPrice').value = ltModal.contractPrice || '';
+  document.getElementById('ltBasePrice').value     = ltModal.basePrice || '';
+  renderLtPayMethods();
+  renderLtChecklist();
+  document.getElementById('ltMemo').value = ltModal.memo || '';
+  renderLtRefund();
+}
+
+function renderLtRoomChips() {
+  var el = document.getElementById('ltRoomChips');
+  if (ltModal.id) { el.innerHTML='<span style="font-size:16px;font-weight:800;color:#d97706">'+ltModal.room+'호</span>'; return; }
+  var allRooms = Object.values(FIXED_FLOORS).reduce(function(a,b){ return a.concat(b); },[]);
+  el.innerHTML = allRooms.map(function(r){
+    return '<div class="lt-room-chip'+(r===ltModal.room?' selected':'')+'" onclick="ltPickRoom(\''+r+'\')">'+r+'</div>';
+  }).join('');
+}
+function ltPickRoom(room) { ltModal.room=room; renderLtRoomChips(); }
+
+function renderLtClientChips() {
+  var chips = clients.map(function(c){
+    var lbl=clientLabel(c), sel=lbl===ltModal.client;
+    return '<div class="lt-client-chip'+(sel?' selected':'')+'" onclick="ltPickClient(\''+esc(lbl)+'\')">'+lbl+'</div>';
+  });
+  chips.push('<div class="lt-client-chip'+(ltModal.client==='__custom__'?' selected':'')+'" onclick="ltPickClient(\'__custom__\')" style="border-style:dashed">기타입력</div>');
+  document.getElementById('ltClientChips').innerHTML = chips.join('');
+  var cw = document.getElementById('ltCustomClientWrap');
+  cw.style.display = ltModal.client==='__custom__' ? 'block' : 'none';
+  if (ltModal.client==='__custom__') document.getElementById('ltCustomClient').value = ltModal.customClient||'';
+}
+function ltPickClient(name) {
+  ltModal.client = ltModal.client===name ? '' : name;
+  ltModal.customClient='';
+  renderLtClientChips();
+}
+
+function renderLtPayMethods() {
+  document.getElementById('ltPayMethods').innerHTML = LT_PAY_METHODS.map(function(m){
+    return '<button class="lt-pay-btn'+(m===ltModal.payMethod?' selected':'')+'" onclick="ltSetPayMethod(\''+m+'\')">'+m+'</button>';
+  }).join('');
+}
+function ltSetPayMethod(m) { ltModal.payMethod=m; renderLtPayMethods(); renderLtChecklist(); }
+
+function renderLtChecklist() {
+  var needsBoth = ltModal.payMethod==='세금계산서'||ltModal.payMethod==='입금대기';
+  var ps = ltPayStatus(ltModal);
+  var html = '';
+  if (needsBoth) {
+    html += '<label class="lt-check-label"><input type="checkbox" onchange="ltModal.taxInvoiceDone=this.checked;renderLtChecklist()"'+(ltModal.taxInvoiceDone?' checked':'')+'>  세금계산서 발행 완료</label>';
+    html += '<label class="lt-check-label"><input type="checkbox" onchange="ltModal.paymentDone=this.checked;renderLtChecklist()"'+(ltModal.paymentDone?' checked':'')+'>  입금 확인</label>';
+  } else {
+    html += '<label class="lt-check-label"><input type="checkbox" onchange="ltModal.paymentDone=this.checked;renderLtChecklist()"'+(ltModal.paymentDone?' checked':'')+'>  수납 완료</label>';
+  }
+  if (ps==='done') html += '<div class="lt-done-badge">✓ 수납완료</div>';
+  document.getElementById('ltChecklist').innerHTML = html;
+}
+
+function renderLtRefund() {
+  var cp = parseInt(document.getElementById('ltContractPrice').value)||0;
+  var bp = parseInt(document.getElementById('ltBasePrice').value)||0;
+  var el = document.getElementById('ltRefundResult');
+  if (!cp||!bp||!ltModal.startDate) { el.textContent='계약금액과 기본단가를 입력하면 계산됩니다'; return; }
+  var days = Math.max(1, ltDayCount(ltModal.startDate));
+  var charged = bp * days;
+  var refund = Math.max(0, cp - charged);
+  el.textContent = days+'박 × '+fmtLt(bp)+'원 = '+fmtLt(charged)+'원\n환불금액: '+fmtLt(refund)+'원'+(refund===0?' (환불 없음)':'');
+}
+
+function ltStartDateChange() {
+  ltModal.startDate = document.getElementById('ltStartDate').value;
+  if (ltModal.startDate) {
+    var end = new Date(ltModal.startDate); end.setDate(end.getDate()+29);
+    ltModal.endDate = toDateStr(end);
+    document.getElementById('ltEndDate').value = ltModal.endDate;
+  }
+  renderLtRefund();
+}
+
+// ── 저장 / 삭제 ──────────────────────────────────────
+function saveLtModal() {
+  var clientName = ltModal.client==='__custom__'
+    ? (document.getElementById('ltCustomClient').value.trim()||'미지정')
+    : ltModal.client;
+  if (!ltModal.room) { showToast('객실을 선택해주세요'); return; }
+  if (!clientName)   { showToast('고객을 선택해주세요'); return; }
+  if (!ltModal.startDate||!ltModal.endDate) { showToast('날짜를 입력해주세요'); return; }
+
+  var contracts = getLtContracts();
+  var entry = {
+    id: ltModal.id || String(Date.now()),
+    room: ltModal.room, client: clientName,
+    startDate: ltModal.startDate, endDate: ltModal.endDate,
+    contractPrice: parseInt(document.getElementById('ltContractPrice').value)||0,
+    basePrice: parseInt(document.getElementById('ltBasePrice').value)||0,
+    payMethod: ltModal.payMethod,
+    taxInvoiceDone: ltModal.taxInvoiceDone,
+    paymentDone: ltModal.paymentDone,
+    memo: document.getElementById('ltMemo').value.trim()
+  };
+
+  if (ltModal.id) {
+    var idx = contracts.findIndex(function(c){ return c.id===ltModal.id; });
+    if (idx>=0) contracts[idx]=entry; else contracts.push(entry);
+  } else {
+    contracts.push(entry);
+  }
+  closeLtModal();
+  renderLtGrid();
+  showToast(entry.room+'호 계약 저장됨');
+  ltSyncToServer(contracts);
+}
+
+function deleteLtModal() {
+  if (!ltModal.id) return;
+  if (!confirm(ltModal.room+'호 계약을 삭제할까요?')) return;
+  var contracts = getLtContracts().filter(function(c){ return c.id!==ltModal.id; });
+  closeLtModal();
+  renderLtGrid();
+  showToast('계약 삭제됨');
+  ltSyncToServer(contracts);
+}
 </script>
 </body>
 </html>
