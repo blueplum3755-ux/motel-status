@@ -1154,38 +1154,53 @@ function ltPayStatus(c) {
 // ── 객실 그리드 ──────────────────────────────────────
 function renderLtGrid() {
   var contracts = getLtContracts();
+  var today = toDateStr(new Date());
   var html = '';
+  var totalOccupied = 0;
   Object.keys(FIXED_FLOORS).forEach(function(floor) {
-    html += '<div class="floor-section"><div class="floor-label">'+floor+'층</div><div class="room-grid">';
+    var floorCards = '';
     FIXED_FLOORS[floor].forEach(function(room) {
-      var today = toDateStr(new Date());
-      // 활성 계약 우선, 그 다음 최근 만기
       var contract = contracts.find(function(c){ return c.room===room && c.startDate<=today && c.endDate>=today; });
       if (!contract) contract = contracts.filter(function(c){ return c.room===room && c.endDate<today; })
         .sort(function(a,b){ return b.endDate.localeCompare(a.endDate); })[0];
-      html += buildLtRoomCard(room, contract);
+      if (contract) { floorCards += buildLtRoomCard(room, contract); totalOccupied++; }
     });
-    html += '</div></div>';
+    if (floorCards) {
+      html += '<div class="floor-section"><div class="floor-label">'+floor+'층</div><div class="lt-grid">'+floorCards+'</div></div>';
+    }
   });
+  if (!totalOccupied) {
+    html = '<div style="text-align:center;padding:48px 20px;color:#a08050;font-size:14px">장기 계약 없음<br><br><span style="font-size:12px;color:#6b5030">아래 버튼으로 신규 계약을 등록하세요</span></div>';
+  }
   document.getElementById('ltRoomGrid').innerHTML = html;
 }
 
 function buildLtRoomCard(room, contract) {
-  if (!contract) {
-    return '<div class="lt-room-card empty" onclick="openLtModal(null,\''+room+'\')"><div class="lt-room-num">'+room+'</div><div class="lt-room-status">공실</div></div>';
-  }
   var active = isLtActive(contract);
   var expired = isLtExpired(contract);
   var ps = ltPayStatus(contract);
-  var cls = expired ? 'expired' : (ps==='done' ? 'paid' : 'unpaid');
+  var cardCls = expired ? 'expired' : (ps==='done' ? 'paid' : (ps==='partial' ? 'partial' : 'unpaid'));
   var payLabel = ps==='done' ? '수납완료' : (ps==='partial' ? '처리중' : '미수납');
   var days = ltDayCount(contract.startDate);
-  var shortClient = contract.client.length>7 ? contract.client.slice(0,7)+'…' : contract.client;
-  return '<div class="lt-room-card '+cls+'" onclick="openLtModal(\''+contract.id+'\',null)">'
-    +'<div class="lt-room-num">'+room+'</div>'
-    +'<div class="lt-room-client">'+shortClient+'</div>'
-    +(active ? '<div class="lt-room-days">'+days+'박째</div>' : '<div class="lt-room-days expired-text">만기</div>')
-    +'<div class="lt-pay-badge '+ps+'">'+payLabel+'</div>'
+  var daysLeft = contract.endDate ? Math.ceil((new Date(contract.endDate) - new Date()) / 86400000) : null;
+  var endMd = contract.endDate ? contract.endDate.slice(5).replace('-','/') : '?';
+  var needsBoth = contract.payMethod==='세금계산서' || contract.payMethod==='입금대기';
+  var checks = '';
+  if (needsBoth) {
+    checks += '<span class="lt-check-item '+(contract.taxInvoiceDone?'done':'pending')+'">'+(contract.taxInvoiceDone?'✓':'✗')+' 계산서</span>';
+    checks += '<span class="lt-check-item '+(contract.paymentDone?'done':'pending')+'">'+(contract.paymentDone?'✓':'✗')+' 입금</span>';
+  } else {
+    checks += '<span class="lt-check-item '+(contract.paymentDone?'done':'pending')+'">'+(contract.paymentDone?'✓':'✗')+' 수납</span>';
+  }
+  var daysInfo = active
+    ? days+'박째'+(daysLeft!==null ? ' · D-'+daysLeft : '')
+    : '<span class="expired-text">만기</span>';
+  return '<div class="lt-room-card '+cardCls+'" onclick="openLtModal(\''+contract.id+'\',null)">'
+    +'<div class="lt-card-header"><span class="lt-room-num">'+room+'호</span><span class="lt-pay-badge '+ps+'">'+payLabel+'</span></div>'
+    +'<div class="lt-room-client">'+contract.client+'</div>'
+    +'<div class="lt-card-stats"><span>'+daysInfo+'</span><span>~'+endMd+'</span></div>'
+    +'<div class="lt-card-price">'+fmtLt(contract.contractPrice)+'원 · '+(contract.payMethod||'미지정')+'</div>'
+    +'<div class="lt-card-checks">'+checks+'</div>'
     +'</div>';
 }
 
