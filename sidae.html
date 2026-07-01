@@ -381,7 +381,12 @@ function getVendors() {
   return raw;
 }
 function saveVendors(v) { localStorage.setItem('sd_vendors', JSON.stringify(v)); }
-function getMenus()   { return JSON.parse(localStorage.getItem('sd_menus') || '[]'); }
+function getMenus() {
+  var raw = JSON.parse(localStorage.getItem('sd_menus') || '[]');
+  return raw.slice().sort(function(a, b) {
+    return (a.price - b.price) || a.name.localeCompare(b.name, 'ko');
+  });
+}
 function saveMenus(m) { localStorage.setItem('sd_menus', JSON.stringify(m)); }
 
 // ── 초기화 ───────────────────────────────────
