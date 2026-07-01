@@ -143,19 +143,42 @@ body { display: flex; flex-direction: column; }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 13px; line-height: 1.8; }
 
 /* ── 거래명세서 ── */
-#printArea { display: none; position: fixed; inset: 0; background: #fff; color: #000; z-index: 999; overflow: auto; padding: 24px; font-family: 'Malgun Gothic', sans-serif; }
-.print-close { position: fixed; top: 12px; right: 12px; background: #333; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
+#printArea { display: none; position: fixed; inset: 0; background: #fff; color: #000; z-index: 999; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 24px; font-family: 'Malgun Gothic', sans-serif; }
+.print-close { position: fixed; top: 12px; right: 12px; background: #333; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; z-index: 1000; }
 .print-action { display: inline-block; margin-bottom: 12px; margin-right: 8px; background: #1a1d27; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; }
-.명세서-title { text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+.명세서-title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 0.15em; margin-bottom: 6px; }
 .명세서-sub   { text-align: center; font-size: 13px; color: #555; margin-bottom: 14px; }
-.명세서-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.명세서-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 6px; }
 .명세서-table th, .명세서-table td { border: 1px solid #bbb; padding: 6px 8px; }
-.명세서-table th { background: #f5f5f5; font-weight: bold; text-align: center; }
+.명세서-table th { background: #f0f0f0; font-weight: bold; text-align: center; }
 .명세서-table td { text-align: center; }
 .명세서-table td.left { text-align: left; }
 .명세서-table td.right { text-align: right; }
-.명세서-total { text-align: right; margin-top: 12px; font-size: 15px; font-weight: bold; }
-@media print { .print-close, .print-action { display: none !important; } }
+/* 팀 구분 헤더 행 */
+.team-header-row td { background: #e8eef8; font-weight: bold; font-size: 12px; text-align: left; padding: 6px 10px; color: #1a3a6a; border-color: #9baac8; }
+/* 팀 소계 행 */
+.subtotal-row td { background: #f0f4ff; font-weight: bold; border-color: #9baac8; }
+/* 합계/VAT 섹션 */
+.명세서-total-box { margin-top: 10px; border: 1px solid #bbb; border-collapse: collapse; width: 100%; font-size: 13px; }
+.명세서-total-box td { border: 1px solid #bbb; padding: 7px 10px; }
+.명세서-total-box .label { font-weight: bold; }
+.명세서-total-box .grand { background: #1a1d27; color: #fff; font-weight: bold; font-size: 15px; }
+@media print {
+  html, body { overflow: visible !important; height: auto !important; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; position: static !important; overflow: visible !important; height: auto !important; padding: 12px !important; }
+  .print-close, .print-action { display: none !important; }
+}
+/* ── 부가세 선택 모달 ── */
+#vatModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 600; align-items: center; justify-content: center; }
+.vat-box { background: #fff; color: #111; border-radius: 16px; padding: 24px 20px; width: 300px; max-width: 90vw; }
+.vat-box-title { font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 18px; }
+.vat-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 15px; font-weight: 600; }
+.vat-option input[type=radio] { width: 20px; height: 20px; cursor: pointer; accent-color: #2563eb; }
+.vat-option.selected { border-color: #2563eb; background: #eff3ff; color: #2563eb; }
+.vat-modal-btns { display: flex; gap: 10px; margin-top: 6px; }
+.vat-cancel-btn { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px; background: #f5f5f5; font-size: 15px; font-weight: 600; cursor: pointer; }
+.vat-confirm-btn { flex: 2; padding: 12px; border: none; border-radius: 10px; background: #1a1d27; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
 
 /* ── 토스트 ── */
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 300; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
@@ -302,6 +325,23 @@ body { display: flex; flex-direction: column; }
     </div>
   </div>
 
+</div>
+
+<!-- 부가세 선택 모달 -->
+<div id="vatModal">
+  <div class="vat-box">
+    <div class="vat-box-title">거래명세서 출력 옵션</div>
+    <label class="vat-option selected" id="vatOpt1" onclick="selectVat('no')">
+      <input type="radio" name="vatOpt" value="no" checked> 부가세 포함 안 함
+    </label>
+    <label class="vat-option" id="vatOpt2" onclick="selectVat('yes')">
+      <input type="radio" name="vatOpt" value="yes"> 부가세 10% 포함
+    </label>
+    <div class="vat-modal-btns">
+      <button class="vat-cancel-btn" onclick="document.getElementById('vatModal').style.display='none'">취소</button>
+      <button class="vat-confirm-btn" onclick="confirmPrint()">출력</button>
+    </div>
+  </div>
 </div>
 
 <!-- 거래명세서 -->
@@ -642,23 +682,112 @@ async function deleteRecord(rowId) {
 
 // ── 거래명세서 ───────────────────────────────
 function printVendor(vendor) {
-  var vr = records.filter(function(r){ return r.vendor===vendor; })
-    .sort(function(a,b){ return a.date.localeCompare(b.date)||(a.id-b.id); });
-  var total=0;
-  var rows = vr.map(function(r){
-    total += r.amount;
-    return '<tr><td>'+r.date+'</td><td>'+(r.team||'')+'</td><td>'+(r.mealType||'')+'</td>'
-      +'<td class="left">'+(r.item||'')+'</td><td class="right">'+fmt(r.amount)+'</td><td class="right">'+fmt(total)+'</td></tr>';
-  }).join('');
+  document.getElementById('vatModal').dataset.vendor = vendor;
+  document.querySelector('input[name="vatOpt"][value="no"]').checked = true;
+  selectVat('no');
+  document.getElementById('vatModal').style.display = 'flex';
+}
+
+function selectVat(val) {
+  document.getElementById('vatOpt1').classList.toggle('selected', val === 'no');
+  document.getElementById('vatOpt2').classList.toggle('selected', val === 'yes');
+  document.querySelector('input[name="vatOpt"][value="'+val+'"]').checked = true;
+}
+
+function confirmPrint() {
+  var vendor = document.getElementById('vatModal').dataset.vendor;
+  var withVat = document.querySelector('input[name="vatOpt"]:checked').value === 'yes';
+  document.getElementById('vatModal').style.display = 'none';
+  doOpenPrint(vendor, withVat);
+}
+
+function doOpenPrint(vendor, withVat) {
+  // 해당 업체 데이터: 팀 → 날짜 → ID 순 정렬
+  var vr = records.filter(function(r){ return r.vendor === vendor; })
+    .sort(function(a,b){
+      var ta = a.team || '', tb = b.team || '';
+      return ta.localeCompare(tb) || a.date.localeCompare(b.date) || (a.id - b.id);
+    });
+
+  // 팀 목록 (등장 순서 유지)
+  var teams = [], teamMap = {};
+  vr.forEach(function(r) {
+    var t = r.team || '(팀 미지정)';
+    if (!teamMap[t]) { teamMap[t] = []; teams.push(t); }
+    teamMap[t].push(r);
+  });
+
+  var grandTotal = 0;
+  var teamTotals = [];
+  var bodyHtml = '';
+
+  teams.forEach(function(team) {
+    var rows = teamMap[team];
+    var teamTotal = 0;
+
+    // 팀 구분 헤더 행
+    bodyHtml += '<tr class="team-header-row"><td colspan="4">▶ ' + team + '</td></tr>';
+
+    rows.forEach(function(r) {
+      teamTotal += r.amount;
+      bodyHtml += '<tr>'
+        + '<td>' + r.date + '</td>'
+        + '<td>' + (r.mealType || '') + '</td>'
+        + '<td class="left">' + (r.item || '') + '</td>'
+        + '<td class="right">' + fmt(r.amount) + '</td>'
+        + '</tr>';
+    });
+
+    // 팀 소계 행
+    bodyHtml += '<tr class="subtotal-row">'
+      + '<td colspan="3" class="right">소계</td>'
+      + '<td class="right">' + fmt(teamTotal) + '원</td>'
+      + '</tr>';
+
+    grandTotal += teamTotal;
+    teamTotals.push({ team: team, total: teamTotal });
+  });
+
+  // 팀별 소계 요약표
+  var summaryHtml = '<table class="명세서-table" style="margin-top:14px;">'
+    + '<thead><tr><th colspan="2" style="text-align:left;background:#e8eef8;color:#1a3a6a;padding:7px 10px;">팀별 소계</th></tr></thead><tbody>';
+  teamTotals.forEach(function(s) {
+    summaryHtml += '<tr>'
+      + '<td class="left" style="font-weight:600;">' + s.team + '</td>'
+      + '<td class="right" style="font-weight:600;">' + fmt(s.total) + '원</td>'
+      + '</tr>';
+  });
+  summaryHtml += '</tbody></table>';
+
+  // 합계 / 부가세
+  var totalHtml = '';
+  if (withVat) {
+    var vat = Math.round(grandTotal * 0.1);
+    var finalTotal = grandTotal + vat;
+    totalHtml = '<table class="명세서-total-box" style="margin-top:6px;">'
+      + '<tr><td class="label" style="width:60%;">공급가액</td><td class="right">' + fmt(grandTotal) + '원</td></tr>'
+      + '<tr><td class="label">부가세 (10%)</td><td class="right">' + fmt(vat) + '원</td></tr>'
+      + '<tr><td class="label grand">합 계</td><td class="right grand">' + fmt(finalTotal) + '원</td></tr>'
+      + '</table>';
+  } else {
+    totalHtml = '<table class="명세서-total-box" style="margin-top:6px;">'
+      + '<tr><td class="label grand" style="width:60%;">합 계</td><td class="right grand">' + fmt(grandTotal) + '원</td></tr>'
+      + '</table>';
+  }
+
   document.getElementById('printContent').innerHTML =
     '<div class="명세서-title">거 래 명 세 서</div>'
-    +'<div class="명세서-sub">공급받는자: '+vendor+'&nbsp;&nbsp;|&nbsp;&nbsp;기간: '+getMonthDisplay()+'</div>'
-    +'<table class="명세서-table"><thead><tr><th>날짜</th><th>팀</th><th>구분</th><th>품목</th><th>금액</th><th>누계금액</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
-    +'<div class="명세서-total">합계: '+fmt(total)+'원</div>';
+    + '<div class="명세서-sub">공급받는자: ' + vendor + '&nbsp;&nbsp;|&nbsp;&nbsp;기간: ' + getMonthDisplay() + '</div>'
+    + '<table class="명세서-table"><thead>'
+    + '<tr><th>날짜</th><th>구분</th><th style="text-align:left;">품목</th><th>금액</th></tr>'
+    + '</thead><tbody>' + bodyHtml + '</tbody></table>'
+    + summaryHtml
+    + totalHtml;
+
   document.getElementById('printArea').style.display = 'block';
 }
-function closePrint() { document.getElementById('printArea').style.display='none'; }
+
+function closePrint() { document.getElementById('printArea').style.display = 'none'; }
 
 // ── 엑셀 다운로드 ────────────────────────────
 function downloadExcel() {
