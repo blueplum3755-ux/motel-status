@@ -57,6 +57,7 @@ body { display: flex; flex-direction: column; }
 .room-card.vacant   { background: #0d2b1a; border-color: #1a5c35; }
 .room-card.dirty    { background: #2b1500; border-color: #5c3500; }
 .room-card.stay     { background: #0d1b3b; border-color: #1e3a7a; }
+.room-card.out      { background: #0d1a28; border-color: #1a3045; }
 .room-card.long     { background: #2b0d0d; border-color: #5c1a1a; }
 .room-card.reserved { background: #1f1a00; border-color: #5c4e00; }
 .room-card.luggage  { background: #0d2429; border-color: #1a5c52; }
@@ -65,6 +66,7 @@ body { display: flex; flex-direction: column; }
 .room-card.vacant   .room-number { color: #4ade80; }
 .room-card.dirty    .room-number { color: #fb923c; }
 .room-card.stay     .room-number { color: #60a5fa; }
+.room-card.out      .room-number { color: #5b9cbf; }
 .room-card.long     .room-number { color: #f87171; }
 .room-card.reserved .room-number { color: #fcd34d; }
 .room-card.luggage  .room-number { color: #2dd4bf; }
@@ -73,6 +75,7 @@ body { display: flex; flex-direction: column; }
 .room-card.vacant   .room-status { color: #4ade80; }
 .room-card.dirty    .room-status { color: #fb923c; }
 .room-card.stay     .room-status { color: #60a5fa; }
+.room-card.out      .room-status { color: #5b9cbf; }
 .room-card.long     .room-status { color: #f87171; }
 .room-card.reserved .room-status { color: #fcd34d; }
 .room-card.luggage  .room-status { color: #2dd4bf; }
@@ -303,16 +306,23 @@ function switchTab(tab) {
 
 // ── 분류 ───────────────────────────────────
 function classify(r) {
-  if (r.type === 'long')   return 'long';
-  if (r.type === 'normal') return 'stay';
-  if (r.isReserved)        return 'reserved';
-  if (r.checkinLabel === '재숙') return 'luggage';
-  if (r.needsClean)        return 'dirty';
+  if (r.type === 'long')                          return 'long';
+  if (r.type === 'normal' && r.occupied)          return 'stay';   // 방 안(USING)
+  if (r.type === 'normal' && !r.occupied)         return 'out';    // 외출(OUT)
+  if (r.isReserved)                               return 'reserved';
+  if (r.checkinLabel === '재숙')                  return 'luggage';
+  if (r.needsClean)                               return 'dirty';
   return 'vacant';
 }
 
 function statusLabel(cls, r) {
-  const map = { vacant:'공실', dirty:'청소필요', stay: r.checkinLabel || '입실중', long: r.occupied ? '장기(在)' : '장기', reserved:'예약', luggage:'재숙' };
+  const map = {
+    vacant:'공실', dirty:'청소필요',
+    stay: r.checkinLabel || '입실중',
+    out:  r.checkinLabel || '외출중',
+    long: r.occupied ? '장기(在)' : '장기',
+    reserved:'예약', luggage:'재숙'
+  };
   return map[cls] || cls;
 }
 
@@ -330,11 +340,12 @@ function renderHeader() {
   document.getElementById('availableNum').textContent = vacant;
 
   const chips = [
-    { label:'입실중', count: allRooms.filter(r => r.type === 'normal').length, color:'#60a5fa' },
-    { label:'장기',   count: allRooms.filter(r => r.type === 'long').length,   color:'#f87171' },
-    { label:'청소필요',count: allRooms.filter(r => r.needsClean).length,       color:'#fb923c' },
-    { label:'예약',   count: allRooms.filter(r => r.isReserved).length,        color:'#fcd34d' },
-    { label:'재숙',   count: allRooms.filter(r => r.checkinLabel === '재숙').length, color:'#2dd4bf' },
+    { label:'입실중', count: allRooms.filter(r => r.type === 'normal' && r.occupied).length,  color:'#60a5fa' },
+    { label:'외출중', count: allRooms.filter(r => r.type === 'normal' && !r.occupied).length, color:'#5b9cbf' },
+    { label:'장기',   count: allRooms.filter(r => r.type === 'long').length,                  color:'#f87171' },
+    { label:'청소필요',count: allRooms.filter(r => r.needsClean).length,                      color:'#fb923c' },
+    { label:'예약',   count: allRooms.filter(r => r.isReserved).length,                       color:'#fcd34d' },
+    { label:'재숙',   count: allRooms.filter(r => r.checkinLabel === '재숙').length,           color:'#2dd4bf' },
   ].filter(c => c.count > 0);
 
   document.getElementById('statRow').innerHTML = chips.map(c =>
@@ -358,7 +369,7 @@ function getRoomsForTab(tab) {
   return allRooms;
 }
 
-const SORT_ORDER = { reserved: 0, vacant: 1, long: 2, luggage: 3, stay: 4, dirty: 5 };
+const SORT_ORDER = { reserved: 0, vacant: 1, long: 2, luggage: 3, stay: 4, out: 5, dirty: 6 };
 
 function renderGrid() {
   const rooms = getRoomsForTab(currentStatusTab)
@@ -372,7 +383,7 @@ function renderGrid() {
     document.getElementById('roomGrid').innerHTML = '<div class="loading" style="grid-column:1/-1">객실 없음</div>';
     return;
   }
-  const GROUP_LABEL = { reserved:'예약', vacant:'공실', long:'장기', luggage:'재숙', stay:'입실중', dirty:'청소필요' };
+  const GROUP_LABEL = { reserved:'예약', vacant:'공실', long:'장기', luggage:'재숙', stay:'입실중', out:'외출중', dirty:'청소필요' };
   let lastCls = null;
   const html = [];
   rooms.forEach(r => {
