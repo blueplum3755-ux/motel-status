@@ -89,7 +89,7 @@ body { display: flex; flex-direction: column; }
 /* ── 저장 바 ── */
 .save-bar {
   flex-shrink: 0;
-  padding: 10px 14px;
+  padding: 10px 14px 50px;
   background: #fff; border-top: 2px solid #e0e4ed; display: flex; gap: 10px;
 }
 .back-btn {
@@ -146,13 +146,6 @@ body { display: flex; flex-direction: column; }
 .status-icon { font-size: 56px; line-height: 1; margin-bottom: 14px; }
 .status-text { font-size: 22px; font-weight: 900; color: #1a1a2e; white-space: nowrap; }
 
-/* ── 홈 인디케이터 영역 ── */
-.safe-bottom {
-  flex-shrink: 0; background: #fff;
-  height: env(safe-area-inset-bottom, 34px);
-  min-height: 34px;
-}
-
 /* ── 토스트 ── */
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a2e; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 15px; z-index: 200; transition: transform 0.25s; white-space: nowrap; pointer-events: none; }
 .toast.show { transform: translateX(-50%) translateY(0); }
@@ -186,8 +179,6 @@ body { display: flex; flex-direction: column; }
   <a class="back-btn" href="index.html">← 현황</a>
   <button class="save-btn" id="saveBtn" onclick="confirmSave()" disabled>체크 후 저장</button>
 </div>
-<div class="safe-bottom"></div>
-
 <div class="toast" id="toast"></div>
 
 <script>

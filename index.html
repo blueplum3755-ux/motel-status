@@ -153,6 +153,7 @@ body { display: flex; flex-direction: column; }
     <div class="header-right">
       <button class="refresh-btn" onclick="loadData()">↻ 새로고침</button>
       <div class="updated-at" id="updatedAt">불러오는 중...</div>
+      <div class="updated-at" id="luggageAt" style="color:#2dd4bf;">짐체크: -</div>
     </div>
   </div>
 </div>
@@ -286,6 +287,8 @@ async function loadData() {
   allRooms = data.rooms || [];
   const t = (data.updatedAt || '').substring(5, 16);
   document.getElementById('updatedAt').textContent = 'RMS: ' + t;
+  const lugTime = data.luggageCheckTime;
+  document.getElementById('luggageAt').textContent = lugTime ? '짐체크: ' + lugTime : '짐체크: -';
   renderAll();
   if (refreshTimer) clearTimeout(refreshTimer);
   refreshTimer = setTimeout(loadData, 60000);
