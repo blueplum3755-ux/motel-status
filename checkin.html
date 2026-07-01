@@ -295,16 +295,6 @@ body { display: flex; flex-direction: column; }
     </div>
   </div>
 
-  <div class="modal-section">
-    <div class="modal-sec-label">인원</div>
-    <div class="person-row">
-      <button class="p-btn" onclick="changePersons(-1)">−</button>
-      <span class="p-val" id="modalPersonsVal">2</span>
-      <span class="p-label">인</span>
-      <div class="extra-info" id="modalExtraInfo"></div>
-    </div>
-  </div>
-
   <div class="modal-total-bar">
     <div class="modal-total-label">합계</div>
     <div class="modal-total-amt" id="modalTotalAmt">₩0</div>
@@ -442,7 +432,7 @@ function renderViewMonthLabel() {
 function populateViewClientSelect() {
   var cur=document.getElementById('viewClientSelect').value;
   document.getElementById('viewClientSelect').innerHTML='<option value="">전체 고객</option>'
-    +clients.map(function(c){ return '<option value="'+esc(c.name)+'"'+(c.name===cur?' selected':'')+'>'+c.name+'</option>'; }).join('');
+    +clients.map(function(c){ var lbl=clientLabel(c); return '<option value="'+esc(lbl)+'"'+(lbl===cur?' selected':'')+'>'+lbl+'</option>'; }).join('');
 }
 
 // ── JSONP ─────────────────────────────────────────────
@@ -518,18 +508,18 @@ function openModal(roomNum) {
   var existing=records.find(function(r){ return r.date===checkDate && r.room===roomNum; });
   modal.roomNum=roomNum;
   modal.existingId=existing?existing.id:null;
-  modal.persons=existing?existing.persons:2;
+  modal.persons=2;
   modal.directPrice=false;
 
   if (existing) {
     modal.price=existing.price;
-    var cl=clients.find(function(c){ return c.name===existing.client; });
+    var cl=clients.find(function(c){ return clientLabel(c)===existing.client; });
     if (cl) { modal.client=existing.client; modal.customClient=''; }
     else     { modal.client='__custom__'; modal.customClient=existing.client; }
   } else {
     modal.client=''; modal.price=0; modal.customClient='';
     // 고객이 1명이면 자동 선택
-    if (clients.length===1) { modal.client=clients[0].name; }
+    if (clients.length===1) { modal.client=clientLabel(clients[0]); }
   }
 
   document.getElementById('modalTitle').textContent=roomNum+'호 숙박기록 '+(existing?'수정':'입력');
@@ -537,7 +527,7 @@ function openModal(roomNum) {
   document.getElementById('modalDeleteBtn').style.display=existing?'block':'none';
   document.getElementById('modalSaveBtn').textContent=existing?'수정':'기록';
 
-  renderModalChips(); renderModalPrices(); renderModalPersons(); renderModalTotal();
+  renderModalChips(); renderModalPrices(); renderModalTotal();
   document.getElementById('modalOverlay').style.display='block';
   document.getElementById('modalSheet').style.display='block';
 }
@@ -547,12 +537,18 @@ function closeModal() {
   document.getElementById('modalSheet').style.display='none';
 }
 
+// 업체명+팀이름 조합 레이블 (저장 키로도 사용)
+function clientLabel(c) {
+  return c.name + (c.team ? ' ' + c.team : '');
+}
+
 // ── 모달: 고객 칩 ─────────────────────────────────────
 function renderModalChips() {
   var chips=clients.map(function(c){
-    var sel=c.name===modal.client;
-    return '<div class="m-chip'+(sel?' selected':'')+'" onclick="selectModalClient(\''+esc(c.name)+'\')">'
-      +c.name+(sel?'<span class="chip-x">×</span>':'')+'</div>';
+    var label=clientLabel(c);
+    var sel=label===modal.client;
+    return '<div class="m-chip'+(sel?' selected':'')+'" onclick="selectModalClient(\''+esc(label)+'\')">'
+      +label+(sel?'<span class="chip-x">×</span>':'')+'</div>';
   });
   chips.push('<div class="m-chip dashed'+(modal.client==='__custom__'?' selected':'')+'" onclick="selectModalClient(\'__custom__\')">기타 직접입력</div>');
   document.getElementById('modalClientChips').innerHTML=chips.join('');
