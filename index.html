@@ -204,7 +204,9 @@ body { display: flex; flex-direction: column; }
       <button class="btn-reserve danger"  onclick="openCancelModal()">예약 취소</button>
     </div>
     <div class="scroll-area">
-      <div class="section-title">현재 예약</div>
+      <div class="section-title">처리 내역 <span id="resLogRefresh" style="font-size:10px;color:var(--text-sub);cursor:pointer;margin-left:8px;" onclick="loadResLog()">↻ 새로고침</span></div>
+      <div id="reservationLog" style="margin-bottom:12px;"></div>
+      <div class="section-title">현재 예약 (RMS 기준)</div>
       <div class="reservation-list" id="reservationList"></div>
     </div>
   </div>
@@ -216,6 +218,7 @@ body { display: flex; flex-direction: column; }
   <div class="modal">
     <div class="modal-title">예약 추가</div>
     <div class="modal-room-list" id="reserveRoomList"></div>
+    <input class="modal-input" id="reservePhone" type="tel" inputmode="numeric" placeholder="전화번호 (필수)" style="margin-bottom:8px">
     <input class="modal-input" id="reserveMemo" type="text" placeholder="메모 (선택)">
     <div class="modal-footer">
       <button class="btn-cancel"  onclick="closeModal('reserveModal')">취소</button>
@@ -302,6 +305,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'reservation') loadResLog();
 }
 
 // ── 분류 ───────────────────────────────────
@@ -442,6 +446,60 @@ function renderReservations() {
     : '<div class="empty-state">예약 없음</div>';
 }
 
+// ── 예약 처리 내역 ─────────────────────────
+let resLogLoading = false;
+function loadResLog() {
+  if (resLogLoading) return;
+  resLogLoading = true;
+  const el = document.getElementById('reservationLog');
+  el.innerHTML = '<div style="color:var(--text-sub);font-size:12px;padding:6px 0;">로딩중...</div>';
+  const cbName = '_resLog_' + Date.now();
+  const script = document.createElement('script');
+  const timeout = setTimeout(() => {
+    resLogLoading = false;
+    delete window[cbName];
+    el.innerHTML = '<div style="color:#f87171;font-size:12px;padding:6px 0;">불러오기 실패</div>';
+  }, 10000);
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    resLogLoading = false;
+    delete window[cbName];
+    script.remove();
+    renderResLog(Array.isArray(data) ? data : []);
+  };
+  script.src = API + '?action=reservation_log&callback=' + cbName;
+  document.head.appendChild(script);
+}
+
+function renderResLog(list) {
+  const el = document.getElementById('reservationLog');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state" style="font-size:12px;padding:6px 0;">처리 내역 없음</div>';
+    return;
+  }
+  const statusInfo = {
+    pending:    { label: '대기중',   color: '#fb923c' },
+    dispatched: { label: '처리중',   color: '#facc15' },
+    done:       { label: '완료',     color: '#4ade80' },
+    '성공':     { label: '완료',     color: '#4ade80' },
+    failed:     { label: '실패',     color: '#f87171' },
+    '실패':     { label: '실패',     color: '#f87171' },
+    cancelled:  { label: '취소됨',   color: '#a3a3a3' },
+  };
+  el.innerHTML = list.slice(0, 20).map(item => {
+    const si = statusInfo[item.status] || { label: item.status || '?', color: '#a3a3a3' };
+    const timeStr = (item.requestedAt || item.createdAt || '').substring(5, 16).replace('T', ' ');
+    const kindStr = item.kind === '취소' ? '취소' : '예약';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:14px;font-weight:700;color:var(--text);min-width:36px">${item.room}호</span>
+      <span style="font-size:12px;color:var(--text-sub);min-width:24px">${kindStr}</span>
+      <span style="font-size:11px;color:var(--text-sub);flex:1">${item.phone || ''} ${item.memo ? '·' + item.memo : ''}</span>
+      <span style="font-size:11px;color:var(--text-sub);white-space:nowrap">${timeStr}</span>
+      <span style="font-size:11px;font-weight:700;color:${si.color};white-space:nowrap">${si.label}</span>
+    </div>`;
+  }).join('');
+}
+
 // ── 예약 추가 ──────────────────────────────
 function openReserveModal() {
   selectedReserveRoom = null;
@@ -462,6 +520,8 @@ function pickReserveRoom(el, room) {
 
 async function submitReservation() {
   if (!selectedReserveRoom) { showToast('객실을 선택해주세요'); return; }
+  const phone = document.getElementById('reservePhone').value.trim();
+  if (!phone) { showToast('전화번호를 입력해주세요'); return; }
   const memo = document.getElementById('reserveMemo').value.trim();
   closeModal('reserveModal');
 
@@ -472,9 +532,10 @@ async function submitReservation() {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=reserve_request&room=${encodeURIComponent(selectedReserveRoom)}&kind=%EC%98%88%EC%95%BD&memo=${encodeURIComponent(memo)}`
+      body: `action=reserve_request&room=${encodeURIComponent(selectedReserveRoom)}&kind=%EC%98%88%EC%95%BD&phone=${encodeURIComponent(phone)}&memo=${encodeURIComponent(memo)}`
     });
     showToast(selectedReserveRoom + '호 예약 요청 완료');
+    setTimeout(loadResLog, 2000);
   } catch (e) {
     showToast('전송 오류 — 잠시 후 확인해주세요');
   }
