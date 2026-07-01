@@ -176,7 +176,7 @@ body { display: flex; flex-direction: column; }
   <div class="tab-panel active" id="tab-status">
     <div class="status-tabs" id="statusTabs">
       <div class="status-tab active" data-status="all" onclick="selectStatusTab('all')">전체</div>
-      <div class="status-tab" data-status="occupied" onclick="selectStatusTab('occupied')">장기·재숙·입실</div>
+      <div class="status-tab" data-status="keyin" onclick="selectStatusTab('keyin')">키삽입·숙박중</div>
       <div class="status-tab" data-status="vacant" onclick="selectStatusTab('vacant')">공실</div>
       <div class="status-tab" data-status="reserved" onclick="selectStatusTab('reserved')">예약</div>
     </div>
@@ -363,7 +363,7 @@ function selectStatusTab(s) { currentStatusTab = s; renderStatusTabs(); renderGr
 
 function getRoomsForTab(tab) {
   if (tab === 'all')      return allRooms;
-  if (tab === 'occupied') return allRooms.filter(r => r.type === 'long' || r.type === 'normal' || r.checkinLabel === '재숙');
+  if (tab === 'keyin')    return allRooms.filter(r => r.occupied && (r.type === 'normal' || r.type === 'long'));
   if (tab === 'vacant')   return allRooms.filter(r => r.type === 'empty' && r.checkinLabel !== '재숙' && !r.isReserved);
   if (tab === 'reserved') return allRooms.filter(r => r.isReserved);
   return allRooms;
