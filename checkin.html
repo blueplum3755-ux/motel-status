@@ -167,7 +167,7 @@ body { display: flex; flex-direction: column; }
 .add-row input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 9px 10px; font-size: 14px; outline: none; }
 .add-row input:focus { border-color: var(--accent); }
 .add-row input.inp-name  { flex: 2; min-width: 80px; }
-.add-row input.inp-price { flex: 1; min-width: 70px; }
+.add-row input.inp-team  { flex: 1; min-width: 70px; }
 .add-btn { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 9px 14px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .hint-box { background: var(--surface2); border: 1px dashed var(--border); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--text-sub); line-height: 1.7; }
 
@@ -255,15 +255,15 @@ body { display: flex; flex-direction: column; }
         </div>
         <div id="clientList"></div>
         <div class="add-row">
-          <input class="inp-name"  id="newClientName"  placeholder="업체명" onkeydown="if(event.key==='Enter')document.getElementById('newClientPrice').focus()">
-          <input class="inp-price" id="newClientPrice" placeholder="기본단가" type="number" inputmode="numeric" onkeydown="if(event.key==='Enter')addClient()">
+          <input class="inp-name" id="newClientName"  placeholder="업체명" onkeydown="if(event.key==='Enter')document.getElementById('newClientTeam').focus()">
+          <input class="inp-team" id="newClientTeam" placeholder="팀이름 (선택)" onkeydown="if(event.key==='Enter')addClient()">
           <button class="add-btn" onclick="addClient()">추가</button>
         </div>
       </div>
       <div class="hint-box">
         <b style="color:var(--text)">💡 안내</b><br>
         · 고객 정보는 서버에 저장되어 PC·폰 공통 사용<br>
-        · 기본단가: 2인 기준 요금 (예: 50000)<br>
+        · 팀이름은 선택사항입니다 (예: 1팀, 야간팀)<br>
         · 추가 인원 1인당 10,000원 자동 가산
       </div>
     </div>
@@ -529,7 +529,7 @@ function openModal(roomNum) {
   } else {
     modal.client=''; modal.price=0; modal.customClient='';
     // 고객이 1명이면 자동 선택
-    if (clients.length===1) { modal.client=clients[0].name; modal.price=clients[0].price; }
+    if (clients.length===1) { modal.client=clients[0].name; }
   }
 
   document.getElementById('modalTitle').textContent=roomNum+'호 숙박기록 '+(existing?'수정':'입력');
@@ -570,8 +570,6 @@ function selectModalClient(name) {
   else {
     modal.client=name;
     if (name!=='__custom__') {
-      var c=clients.find(function(c){ return c.name===name; });
-      if (c) modal.price=c.price;
       modal.customClient='';
     }
     modal.directPrice=false;
@@ -828,7 +826,7 @@ function renderSettings() {
   var html=clients.length?clients.map(function(c,i){
     return '<div class="client-row">'
       +'<div class="cr-name">'+c.name+'</div>'
-      +'<div class="cr-price">'+fmt(c.price)+'원</div>'
+      +(c.team?'<div class="cr-price" style="color:var(--text-sub)">'+c.team+'</div>':'<div class="cr-price"></div>')
       +'<button class="cr-del" onclick="removeClient('+i+')">×</button>'
       +'</div>';
   }).join('')
@@ -838,13 +836,14 @@ function renderSettings() {
 
 function addClient() {
   var n=document.getElementById('newClientName').value.trim();
-  var p=parseInt(document.getElementById('newClientPrice').value,10)||0;
+  var t=document.getElementById('newClientTeam').value.trim();
   if (!n){ showToast('업체명을 입력해주세요'); return; }
-  if (!p){ showToast('기본단가를 입력해주세요'); return; }
   if (clients.find(function(c){ return c.name===n; })){ showToast('이미 등록된 업체입니다'); return; }
-  clients.push({ name:n, price:p });
+  var entry={ name:n };
+  if (t) entry.team=t;
+  clients.push(entry);
   document.getElementById('newClientName').value='';
-  document.getElementById('newClientPrice').value='';
+  document.getElementById('newClientTeam').value='';
   renderSettings(); populateViewClientSelect(); renderRoomGrid();
   saveConfig();
 }
