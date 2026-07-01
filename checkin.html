@@ -782,8 +782,8 @@ function printClient(c) {
     .sort(function(a,b){ return a.date.localeCompare(b.date)||(a.room.localeCompare(b.room)); });
   var grand=0;
   var rows=recs.map(function(r){ grand+=r.total;
-    return '<tr><td>'+r.date+'</td><td>'+r.room+'호</td><td>'+r.persons+'인</td>'
-      +'<td class="right">'+fmt(r.price)+'</td><td class="right">'+(r.extra>0?fmt(r.extra):'-')+'</td><td class="right">'+fmt(r.total)+'</td></tr>';
+    return '<tr><td>'+r.date+'</td><td>'+r.room+'호</td>'
+      +'<td class="right">'+fmt(r.price)+'</td><td class="right">'+fmt(r.total)+'</td></tr>';
   }).join('');
   var rooms=[...new Set(recs.map(function(r){ return r.room; }))].sort();
   var summary=rooms.map(function(rm){ return rm+'호 '+recs.filter(function(r){ return r.room===rm; }).length+'박'; }).join('  /  ');
@@ -791,7 +791,7 @@ function printClient(c) {
     '<div class="명세서-title">거 래 명 세 서</div>'
     +'<div class="명세서-sub">공급받는자: '+c+'&nbsp;&nbsp;|&nbsp;&nbsp;기간: '+viewMonth.getFullYear()+'년 '+(viewMonth.getMonth()+1)+'월</div>'
     +'<div class="명세서-sub" style="color:#333">'+summary+'</div>'
-    +'<table class="명세서-table"><thead><tr><th>날짜</th><th>객실</th><th>인원</th><th>기본금액</th><th>추가인원금액</th><th>합계금액</th></tr></thead>'
+    +'<table class="명세서-table"><thead><tr><th>날짜</th><th>객실</th><th>금액</th><th>합계금액</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table>'
     +'<div class="명세서-total">합계: '+fmt(grand)+'원</div>';
   document.getElementById('printArea').style.display='block';
@@ -806,8 +806,8 @@ function downloadExcel() {
   var cls=[...new Set(recs.map(function(r){ return r.client; }).filter(Boolean))].sort();
   cls.forEach(function(c){
     var cr=recs.filter(function(r){ return r.client===c; }).sort(function(a,b){ return a.date.localeCompare(b.date)||(a.room.localeCompare(b.room)); });
-    var rows=[['날짜','객실','인원','기본금액','추가인원금액','합계금액']];
-    cr.forEach(function(r){ rows.push([r.date,r.room+'호',r.persons,r.price,r.extra,r.total]); });
+    var rows=[['날짜','객실','금액','합계금액']];
+    cr.forEach(function(r){ rows.push([r.date,r.room+'호',r.price,r.total]); });
     rows.push(['','','','','합계',cr.reduce(function(s,r){ return s+r.total; },0)]);
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:13},{wch:7},{wch:5},{wch:12},{wch:14},{wch:12}];
