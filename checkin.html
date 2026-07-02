@@ -212,6 +212,11 @@ body { display: flex; flex-direction: column; }
 .lt-room-card.paid    { border-color: #16a34a; background: #0a1a0a; }
 .lt-room-card.partial { border-color: #fde047; background: #FDE8C8; }
 .lt-room-card.expired { border-color: #504030; background: #180f04; opacity: 0.65; }
+.lt-room-card.expiring-today { border-color: #ef4444; border-width: 2px; box-shadow: 0 0 0 1px #ef4444 inset; }
+.lt-expire-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #ef4444; color: #fff; margin-left: 4px; }
+.lt-expire-banner { display: none; background: #2a0808; border: 1.5px solid #ef4444; border-radius: 10px; padding: 10px 12px; margin: 0 14px 10px; font-size: 12px; color: #fca5a5; font-weight: 700; }
+.lt-expire-banner.show { display: block; }
+.lt-expire-banner b { color: #fff; }
 .lt-card-header { display: flex; justify-content: space-between; align-items: center; }
 .lt-room-num { font-size: 16px; font-weight: 800; color: #a5b4fc; }
 .lt-room-client { font-size: 12px; color: #d97706; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -378,6 +383,7 @@ body { display: flex; flex-direction: column; }
     <div style="flex:none;padding:0 10px;font-size:10px;color:#a08050;align-self:center;white-space:nowrap" id="ltSyncStatus"></div>
   </div>
   <div class="lt-panel active" id="lt-panel-grid">
+    <div class="lt-expire-banner" id="ltExpireBanner"></div>
     <div class="lt-scroll"><div id="ltRoomGrid"></div></div>
     <div class="lt-new-btn" onclick="openLtModal(null,null)">＋ 신규 장기계약</div>
   </div>
@@ -1157,13 +1163,18 @@ function renderLtGrid() {
   var today = toDateStr(new Date());
   var html = '';
   var totalOccupied = 0;
+  var expiringToday = [];
   Object.keys(FIXED_FLOORS).forEach(function(floor) {
     var floorCards = '';
     FIXED_FLOORS[floor].forEach(function(room) {
       var contract = contracts.find(function(c){ return c.room===room && c.startDate<=today && c.endDate>=today; });
       if (!contract) contract = contracts.filter(function(c){ return c.room===room && c.endDate<today; })
         .sort(function(a,b){ return b.endDate.localeCompare(a.endDate); })[0];
-      if (contract) { floorCards += buildLtRoomCard(room, contract); totalOccupied++; }
+      if (contract) {
+        floorCards += buildLtRoomCard(room, contract);
+        totalOccupied++;
+        if (contract.endDate === today) expiringToday.push({ room: room, client: contract.client });
+      }
     });
     if (floorCards) {
       html += '<div class="floor-section"><div class="floor-label">'+floor+'층</div><div class="lt-grid">'+floorCards+'</div></div>';
@@ -1173,13 +1184,27 @@ function renderLtGrid() {
     html = '<div style="text-align:center;padding:48px 20px;color:#a08050;font-size:14px">장기 계약 없음<br><br><span style="font-size:12px;color:#6b5030">아래 버튼으로 신규 계약을 등록하세요</span></div>';
   }
   document.getElementById('ltRoomGrid').innerHTML = html;
+
+  // 오늘 만료 장기객실 배너
+  var banner = document.getElementById('ltExpireBanner');
+  if (expiringToday.length) {
+    banner.className = 'lt-expire-banner show';
+    banner.innerHTML = '⏰ 오늘 만료 장기객실 ' + expiringToday.length + '건 : ' +
+      expiringToday.map(function(x){ return '<b>' + x.room + '호(' + x.client + ')</b>'; }).join(', ');
+  } else {
+    banner.className = 'lt-expire-banner';
+    banner.innerHTML = '';
+  }
 }
 
 function buildLtRoomCard(room, contract) {
   var active = isLtActive(contract);
   var expired = isLtExpired(contract);
   var ps = ltPayStatus(contract);
+  var today = toDateStr(new Date());
+  var expiringToday = active && contract.endDate === today;
   var cardCls = expired ? 'expired' : (ps==='done' ? 'paid' : (ps==='partial' ? 'partial' : 'unpaid'));
+  if (expiringToday) cardCls += ' expiring-today';
   var payLabel = ps==='done' ? '수납완료' : (ps==='partial' ? '처리중' : '미수납');
   var days = ltDayCount(contract.startDate);
   var daysLeft = contract.endDate ? Math.ceil((new Date(contract.endDate) - new Date()) / 86400000) : null;
@@ -1196,7 +1221,7 @@ function buildLtRoomCard(room, contract) {
     ? days+'박째'+(daysLeft!==null ? ' · D-'+daysLeft : '')
     : '<span class="expired-text">만기</span>';
   return '<div class="lt-room-card '+cardCls+'" onclick="openLtModal(\''+contract.id+'\',null)">'
-    +'<div class="lt-card-header"><span class="lt-room-num">'+room+'호</span><span class="lt-pay-badge '+ps+'">'+payLabel+'</span></div>'
+    +'<div class="lt-card-header"><span class="lt-room-num">'+room+'호</span><span>'+(expiringToday?'<span class="lt-expire-badge">오늘만료</span>':'')+'<span class="lt-pay-badge '+ps+'">'+payLabel+'</span></span></div>'
     +'<div class="lt-room-client">'+contract.client+'</div>'
     +'<div class="lt-card-stats"><span>'+daysInfo+'</span><span>~'+endMd+'</span></div>'
     +'<div class="lt-card-price">'+fmtLt(contract.contractPrice)+'원 · '+(contract.payMethod||'미지정')+'</div>'

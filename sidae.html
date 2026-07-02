@@ -296,6 +296,10 @@ body { display: flex; flex-direction: column; }
   <!-- ── 정산 탭 ── -->
   <div class="tab-panel" id="tab-settle">
     <div class="scroll-area">
+      <div class="total-bar" id="settleTotalBar">
+        <div class="total-label" id="settleTotalLabel">합계</div>
+        <div class="total-amount" id="settleTotalAmount">-</div>
+      </div>
       <div class="excel-btn-wrap">
         <button class="excel-btn" onclick="downloadExcel()">📥 전체 엑셀 다운로드</button>
       </div>
@@ -655,7 +659,20 @@ function renderLedger() {
 function renderSettle() {
   var vendors = [...new Set(records.map(function(r){ return r.vendor; }).filter(Boolean))].sort();
   var container = document.getElementById('vendorSummary');
+
+  // 월말 자동 집계: 전체 업체 합계를 상단에 표시
+  var grandTotal = records.reduce(function(s,r){ return s+r.amount; }, 0);
+  document.getElementById('settleTotalLabel').textContent = getMonthDisplay() + ' 전체 합계 (' + vendors.length + '개 업체)';
+  document.getElementById('settleTotalAmount').textContent = fmt(grandTotal) + '원';
+
   if (!vendors.length) { container.innerHTML='<div class="empty-state">이번달 기록이 없습니다</div>'; return; }
+
+  // 업체별 합계 기준 내림차순 정렬 (금액 큰 업체부터 확인)
+  vendors.sort(function(a,b) {
+    var ta = records.filter(function(r){return r.vendor===a;}).reduce(function(s,r){return s+r.amount;},0);
+    var tb = records.filter(function(r){return r.vendor===b;}).reduce(function(s,r){return s+r.amount;},0);
+    return tb - ta;
+  });
 
   container.innerHTML = vendors.map(function(v) {
     var vr = records.filter(function(r){ return r.vendor===v; });
