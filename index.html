@@ -6,13 +6,13 @@
 <title>객실 현황</title>
 <style>
 :root {
-  --bg: #0f1117;
-  --surface: #1a1d27;
-  --surface2: #222536;
-  --border: #2d3148;
-  --text: #e8eaf0;
-  --text-sub: #7b80a0;
-  --accent: #6c7aff;
+  --bg: #F1E8D3;
+  --surface: #E8DCC0;
+  --surface2: #D8CBA8;
+  --border: #C4B898;
+  --text: #33473C;
+  --text-sub: #4A6B5A;
+  --accent: #6B8F71;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); overflow: hidden; }
@@ -22,7 +22,7 @@ body { display: flex; flex-direction: column; }
 .header { flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 16px; }
 .header-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .available-badge { display: flex; align-items: baseline; gap: 6px; }
-.available-num { font-size: 36px; font-weight: 800; color: #4ade80; line-height: 1; }
+.available-num { font-size: 36px; font-weight: 800; color: #6B8F71; line-height: 1; }
 .available-label { font-size: 13px; color: var(--text-sub); }
 .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
@@ -32,9 +32,9 @@ body { display: flex; flex-direction: column; }
 .stat-dot { width: 7px; height: 7px; border-radius: 50%; }
 
 /* ── 탭 바 (상단: 현황/청소/예약) ── */
-.tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 2px solid var(--border); }
-.tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 15px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 3px solid transparent; letter-spacing: 0.02em; }
-.tab-btn.active { color: #ffffff; border-bottom-color: var(--accent); }
+.tab-bar { flex-shrink: 0; display: flex; background: #D8CBA8; border-bottom: 2px solid var(--border); }
+.tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 15px; font-weight: 700; color: #4A6B5A; cursor: pointer; border-bottom: 3px solid transparent; letter-spacing: 0.02em; }
+.tab-btn.active { color: #33473C; border-bottom-color: var(--accent); }
 .tab-link { text-decoration: none; }
 
 /* ── 컨텐츠 ── */
@@ -43,9 +43,9 @@ body { display: flex; flex-direction: column; }
 .tab-panel.active { display: flex; }
 
 /* ── 상태 탭 (하단: 장기·재숙·입실/공실/예약) ── */
-.status-tabs { flex-shrink: 0; display: flex; background: #1e2235; border-bottom: 1px solid var(--border); }
-.status-tab { flex: 1; padding: 9px 6px; font-size: 13px; font-weight: 600; color: #8890b5; cursor: pointer; text-align: center; border-bottom: 2px solid transparent; letter-spacing: 0.01em; }
-.status-tab.active { color: #c8ccf0; border-bottom-color: var(--accent); background: #252a42; }
+.status-tabs { flex-shrink: 0; display: flex; background: #D8CBA8; border-bottom: 1px solid var(--border); }
+.status-tab { flex: 1; padding: 9px 6px; font-size: 13px; font-weight: 600; color: #4A6B5A; cursor: pointer; text-align: center; border-bottom: 2px solid transparent; letter-spacing: 0.01em; }
+.status-tab.active { color: #33473C; border-bottom-color: var(--accent); background: #D5E8D9; }
 
 /* ── 객실 그리드 ── */
 .floor-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; }
@@ -54,29 +54,29 @@ body { display: flex; flex-direction: column; }
 @media (min-width: 768px) { .room-grid { grid-template-columns: repeat(5, 1fr); } }
 
 .room-card { border-radius: 12px; border: 1px solid; padding: 10px 8px; min-height: 78px; display: flex; flex-direction: column; gap: 3px; position: relative; }
-.room-card.vacant   { background: #0d2b1a; border-color: #1a5c35; }
-.room-card.dirty    { background: #2b1500; border-color: #5c3500; }
-.room-card.stay     { background: #0d1b3b; border-color: #1e3a7a; }
-.room-card.out      { background: #0d1a28; border-color: #1a3045; }
-.room-card.long     { background: #2b0d0d; border-color: #5c1a1a; }
-.room-card.reserved { background: #1f1a00; border-color: #5c4e00; }
-.room-card.luggage  { background: #0d2429; border-color: #1a5c52; }
+.room-card.vacant   { background: #D5EFDC; border-color: #6B8F71; }
+.room-card.dirty    { background: #FDE8C8; border-color: #E3A857; }
+.room-card.stay     { background: #D5E4F0; border-color: #8FA8C4; }
+.room-card.out      { background: #DAE4EC; border-color: #7A9BB8; }
+.room-card.long     { background: #F0DDD6; border-color: #C1704F; }
+.room-card.reserved { background: #F5EDCC; border-color: #C4A040; }
+.room-card.luggage  { background: #CDE6E4; border-color: #5A9994; }
 
 .room-number { font-size: 18px; font-weight: 700; line-height: 1; }
-.room-card.vacant   .room-number { color: #4ade80; }
+.room-card.vacant   .room-number { color: #6B8F71; }
 .room-card.dirty    .room-number { color: #fb923c; }
 .room-card.stay     .room-number { color: #60a5fa; }
 .room-card.out      .room-number { color: #5b9cbf; }
-.room-card.long     .room-number { color: #f87171; }
+.room-card.long     .room-number { color: #C1704F; }
 .room-card.reserved .room-number { color: #fcd34d; }
 .room-card.luggage  .room-number { color: #2dd4bf; }
 
 .room-status { font-size: 11px; font-weight: 600; }
-.room-card.vacant   .room-status { color: #4ade80; }
+.room-card.vacant   .room-status { color: #6B8F71; }
 .room-card.dirty    .room-status { color: #fb923c; }
 .room-card.stay     .room-status { color: #60a5fa; }
 .room-card.out      .room-status { color: #5b9cbf; }
-.room-card.long     .room-status { color: #f87171; }
+.room-card.long     .room-status { color: #C1704F; }
 .room-card.reserved .room-status { color: #fcd34d; }
 .room-card.luggage  .room-status { color: #2dd4bf; }
 
@@ -89,21 +89,21 @@ body { display: flex; flex-direction: column; }
 .clean-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
 @media (min-width: 480px) { .clean-grid { grid-template-columns: repeat(4, 1fr); } }
 .clean-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; }
-.clean-card.need { border-color: #5c3500; background: #1a0e00; }
-.clean-card.done { border-color: #1a5c35; background: #001a0d; }
+.clean-card.need { border-color: #E3A857; background: #1a0e00; }
+.clean-card.done { border-color: #6B8F71; background: #001a0d; }
 .clean-room { font-size: 20px; font-weight: 700; }
 .clean-card.need .clean-room { color: #fb923c; }
-.clean-card.done .clean-room { color: #4ade80; }
+.clean-card.done .clean-room { color: #6B8F71; }
 .clean-info { font-size: 11px; color: var(--text-sub); }
 .clean-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; align-self: flex-start; }
 .badge-need { background: #3d1500; color: #fb923c; }
-.badge-done { background: #002d1a; color: #4ade80; }
+.badge-done { background: #002d1a; color: #6B8F71; }
 
 /* ── 예약 탭 ── */
 .reserve-actions { display: flex; gap: 10px; padding: 12px 16px; flex-shrink: 0; }
 .btn-reserve { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .btn-reserve.primary { background: #1a3a5c; color: #60a5fa; }
-.btn-reserve.danger  { background: #3b0d0d; color: #f87171; }
+.btn-reserve.danger  { background: #3b0d0d; color: #C1704F; }
 .reservation-list { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; }
 .reservation-item { background: var(--surface); border: 1px solid #5c4e00; border-radius: 10px; padding: 12px 14px; }
 .reservation-room { font-size: 16px; font-weight: 700; color: #fcd34d; }

@@ -6,8 +6,8 @@
 <title>식대 장부</title>
 <style>
 :root {
-  --bg: #0f1117; --surface: #1a1d27; --surface2: #222536;
-  --border: #2d3148; --text: #e8eaf0; --text-sub: #7b80a0; --accent: #6c7aff;
+  --bg: #F1E8D3; --surface: #E8DCC0; --surface2: #D8CBA8;
+  --border: #C4B898; --text: #33473C; --text-sub: #4A6B5A; --accent: #6B8F71;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); overflow: hidden; }
@@ -23,9 +23,9 @@ body { display: flex; flex-direction: column; }
 .month-label { font-size: 15px; font-weight: 700; min-width: 96px; text-align: center; }
 
 /* ── 탭 바 ── */
-.tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 2px solid var(--border); }
-.tab-btn { flex: 1; padding: 11px 0; text-align: center; font-size: 13px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 3px solid transparent; }
-.tab-btn.active { color: #fff; border-bottom-color: var(--accent); }
+.tab-bar { flex-shrink: 0; display: flex; background: #D8CBA8; border-bottom: 2px solid var(--border); }
+.tab-btn { flex: 1; padding: 11px 0; text-align: center; font-size: 13px; font-weight: 700; color: #4A6B5A; cursor: pointer; border-bottom: 3px solid transparent; }
+.tab-btn.active { color: #33473C; border-bottom-color: var(--accent); }
 
 /* ── 컨텐츠 ── */
 .content { flex: 1; overflow: hidden; }
@@ -43,33 +43,33 @@ body { display: flex; flex-direction: column; }
 /* ── 칩 선택 (업체/팀) ── */
 .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 9px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
-.chip.selected { border-color: var(--accent); background: #1a1d40; color: var(--accent); }
+.chip.selected { border-color: var(--accent); background: #D5E8D9; color: #33473C; }
 .chip-empty { font-size: 12px; color: var(--text-sub); padding: 4px 0; }
 
 /* ── 식사 구분 ── */
 .meal-toggle { display: flex; gap: 8px; }
 .meal-btn { flex: 1; padding: 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text-sub); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; }
-.meal-btn.active.jo  { border-color: #4ade80; background: #0d2b1a; color: #4ade80; }
-.meal-btn.active.ju  { border-color: #fde047; background: #1f1a00; color: #fde047; }
-.meal-btn.active.suk { border-color: #c4b5fd; background: #1a0d2e; color: #c4b5fd; }
+.meal-btn.active.jo  { border-color: #6B8F71; background: #D5EFDC; color: #33473C; }
+.meal-btn.active.ju  { border-color: #E3A857; background: #FDE8C8; color: #7A4A20; }
+.meal-btn.active.suk { border-color: #8FA8C4; background: #DDE6F0; color: #33473C; }
 
 /* ── 품목 선택 칩 ── */
 .menu-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .menu-chip { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.15s; user-select: none; }
 .menu-chip .menu-name { font-size: 13px; font-weight: 600; color: var(--text-sub); display: block; }
-.menu-chip .menu-price { font-size: 11px; color: #4b5180; margin-top: 2px; display: block; }
-.menu-chip.selected { border-color: #4ade80; background: #0d2b1a; cursor: default; }
-.menu-chip.selected .menu-name { color: #4ade80; }
-.menu-chip.selected .menu-price { color: #4ade80; font-weight: 700; }
+.menu-chip .menu-price { font-size: 11px; color: #4A6B5A; margin-top: 2px; display: block; }
+.menu-chip.selected { border-color: #6B8F71; background: #D5EFDC; cursor: default; }
+.menu-chip.selected .menu-name { color: #33473C; }
+.menu-chip.selected .menu-price { color: #33473C; font-weight: 700; }
 /* 수량 조절 행 */
 .qty-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; gap: 6px; }
-.qty-btn { background: #1a3d28; border: 1px solid #4ade80; color: #4ade80; border-radius: 6px; width: 26px; height: 26px; font-size: 18px; line-height: 1; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.qty-val { font-size: 15px; font-weight: 800; color: #4ade80; min-width: 20px; text-align: center; }
-.qty-remove { background: none; border: none; color: #f87171; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; }
+.qty-btn { background: #D5EFDC; border: 1px solid #6B8F71; color: #33473C; border-radius: 6px; width: 26px; height: 26px; font-size: 18px; line-height: 1; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.qty-val { font-size: 15px; font-weight: 800; color: #6B8F71; min-width: 20px; text-align: center; }
+.qty-remove { background: none; border: none; color: #C1704F; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; }
 
 /* ── 금액 합산 표시 ── */
 .amount-display { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-.amount-total { font-size: 22px; font-weight: 800; color: #4ade80; }
+.amount-total { font-size: 22px; font-weight: 800; color: #6B8F71; }
 .amount-breakdown { font-size: 11px; color: var(--text-sub); margin-top: 4px; line-height: 1.6; }
 
 /* ── 저장 버튼 ── */
@@ -82,7 +82,7 @@ body { display: flex; flex-direction: column; }
 .filter-select { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 14px; }
 .total-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 .total-label { font-size: 12px; color: var(--text-sub); }
-.total-amount { font-size: 20px; font-weight: 800; color: #4ade80; }
+.total-amount { font-size: 20px; font-weight: 800; color: #6B8F71; }
 .meal-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .meal-table th { padding: 7px 5px; text-align: left; font-size: 10px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
 .meal-table td { padding: 9px 5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -174,7 +174,7 @@ body { display: flex; flex-direction: column; }
   @page { margin: 15mm 12mm; @bottom-center { content: "- " counter(page) " -"; font-size: 11pt; color: #555; } }
 }
 /* ── 부가세 선택 모달 ── */
-#vatModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 600; align-items: center; justify-content: center; }
+#vatModal { display: none; position: fixed; inset: 0; background: rgba(33,47,40,0.5); z-index: 600; align-items: center; justify-content: center; }
 .vat-box { background: #fff; color: #111; border-radius: 16px; padding: 24px 20px; width: 300px; max-width: 90vw; }
 .vat-box-title { font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 18px; }
 .vat-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-size: 15px; font-weight: 600; }
