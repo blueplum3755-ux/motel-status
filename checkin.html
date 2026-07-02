@@ -6,8 +6,8 @@
 <title>일일·장기 입실체크</title>
 <style>
 :root {
-  --bg: #F1E8D3; --surface: #E8DCC0; --surface2: #D8CBA8;
-  --border: #C4B898; --text: #33473C; --text-sub: #4A6B5A; --accent: #6B8F71;
+  --bg: #0f1117; --surface: #1a1d27; --surface2: #222536;
+  --border: #2d3148; --text: #e8eaf0; --text-sub: #7b80a0; --accent: #6c7aff;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); overflow: hidden; }
@@ -22,9 +22,9 @@ body { display: flex; flex-direction: column; }
 .header-stats b { color: #6B8F71; }
 
 /* ── 탭 바 ── */
-.tab-bar { flex-shrink: 0; display: flex; background: #D8CBA8; border-bottom: 2px solid var(--border); }
-.tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 700; color: #4A6B5A; cursor: pointer; border-bottom: 3px solid transparent; }
-.tab-btn.active { color: #33473C; border-bottom-color: var(--accent); }
+.tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 2px solid var(--border); }
+.tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 3px solid transparent; }
+.tab-btn.active { color: #fff; border-bottom-color: var(--accent); }
 
 /* ── 컨텐츠 ── */
 .content { flex: 1; overflow: hidden; }
@@ -46,16 +46,16 @@ body { display: flex; flex-direction: column; }
 @media (min-width: 400px) { .room-grid { grid-template-columns: repeat(5, 1fr); } }
 .room-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.15s; min-height: 66px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .room-card:active { transform: scale(0.93); }
-.room-card.checked { background: #D5E8D9; border-color: var(--accent); }
+.room-card.checked { background: #1a1d40; border-color: var(--accent); }
 .room-num { font-size: 15px; font-weight: 700; }
-.room-card.checked .room-num { color: #33473C; }
-.room-client-tag { font-size: 10px; color: #4A6B5A; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.room-amt { font-size: 10px; color: #6B8F71; font-weight: 700; }
-.room-persons { font-size: 10px; color: #4A6B5A; }
+.room-card.checked .room-num { color: #a5b4fc; }
+.room-client-tag { font-size: 10px; color: #6b7199; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-amt { font-size: 10px; color: #4ade80; font-weight: 700; }
+.room-persons { font-size: 10px; color: #6b7199; }
 
 /* ── 모달 ── */
-.modal-overlay { position: fixed; inset: 0; background: rgba(33,47,40,0.5); z-index: 200; display: none; }
-.modal-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #E8DCC0; border-radius: 20px 20px 0 0; padding: 20px 16px 36px; z-index: 201; display: none; max-height: 92vh; overflow-y: auto; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; display: none; }
+.modal-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1e2132; border-radius: 20px 20px 0 0; padding: 20px 16px 36px; z-index: 201; display: none; max-height: 92vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .modal-title { font-size: 17px; font-weight: 800; }
 .modal-date-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--text-sub); }
@@ -65,7 +65,7 @@ body { display: flex; flex-direction: column; }
 /* 고객 칩 */
 .client-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .m-chip { padding: 8px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text-sub); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-.m-chip.selected { border-color: var(--accent); background: #1a1d40; color: #33473C; }
+.m-chip.selected { border-color: var(--accent); background: #1a1d40; color: #a5b4fc; }
 .m-chip.dashed { border-style: dashed; }
 .m-chip .chip-x { font-size: 16px; }
 .custom-input { margin-top: 8px; display: none; }
@@ -75,7 +75,7 @@ body { display: flex; flex-direction: column; }
 /* 요금 */
 .price-btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .price-btn { flex: 1; min-width: 72px; padding: 11px 6px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface2); color: var(--text-sub); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; }
-.price-btn.selected { border-color: var(--accent); background: #1a1d40; color: #33473C; }
+.price-btn.selected { border-color: var(--accent); background: #1a1d40; color: #a5b4fc; }
 .price-direct-wrap { margin-top: 8px; display: none; }
 .price-direct-wrap input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 15px; outline: none; }
 .price-direct-wrap input:focus { border-color: var(--accent); }
@@ -86,7 +86,7 @@ body { display: flex; flex-direction: column; }
 .p-btn:active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .p-val { font-size: 18px; font-weight: 800; min-width: 30px; text-align: center; }
 .p-label { font-size: 13px; color: var(--text-sub); }
-.extra-info { flex: 1; text-align: right; font-size: 12px; color: #E3A857; }
+.extra-info { flex: 1; text-align: right; font-size: 12px; color: #fde047; }
 
 /* 합계 */
 .modal-total-bar { background: var(--bg); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -97,7 +97,7 @@ body { display: flex; flex-direction: column; }
 .modal-btn-row { display: flex; gap: 10px; }
 .modal-cancel-btn { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface2); color: var(--text-sub); font-size: 15px; font-weight: 700; cursor: pointer; }
 .modal-save-btn { flex: 2; padding: 14px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
-.modal-delete-btn { flex: 1; padding: 14px; border: 1px solid #C1704F; border-radius: 10px; background: #F5DDD5; color: #C1704F; font-size: 14px; font-weight: 700; cursor: pointer; display: none; }
+.modal-delete-btn { flex: 1; padding: 14px; border: 1px solid #5c1a1a; border-radius: 10px; background: #1a0909; color: #C1704F; font-size: 14px; font-weight: 700; cursor: pointer; display: none; }
 
 /* ── 열람 탭 ── */
 .view-header { flex-shrink: 0; padding: 10px 14px 0; }
@@ -118,7 +118,7 @@ body { display: flex; flex-direction: column; }
 .cal-cell.selected { background: #1a1d40; }
 .cal-day { font-size: 13px; font-weight: 600; }
 .cal-day-circle { background: var(--accent); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 13px; font-weight: 700; }
-.cal-cnt { font-size: 10px; color: #33473C; font-weight: 700; margin-top: 2px; }
+.cal-cnt { font-size: 10px; color: #a5b4fc; font-weight: 700; margin-top: 2px; }
 .cal-cell:nth-child(7n+1) .cal-day { color: #C1704F; }
 .cal-cell:nth-child(7n)   .cal-day { color: #60a5fa; }
 
@@ -134,7 +134,7 @@ body { display: flex; flex-direction: column; }
 .drc-detail { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
 .drc-right { text-align: right; }
 .drc-base  { font-size: 11px; color: var(--text-sub); }
-.drc-extra { font-size: 11px; color: #E3A857; }
+.drc-extra { font-size: 11px; color: #fde047; }
 .drc-total { font-size: 13px; font-weight: 700; color: #6B8F71; }
 .drc-del   { background: none; border: none; color: #3a3f60; font-size: 18px; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
 .drc-del:active { color: #C1704F; }
@@ -176,7 +176,7 @@ body { display: flex; flex-direction: column; }
 .print-close { position: fixed; top: 12px; right: 12px; background: #333; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
 .print-action { display: inline-block; margin-bottom: 12px; margin-right: 8px; background: #1a1d27; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; }
 .명세서-title { text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 6px; }
-.명세서-sub   { text-align: center; font-size: 13px; color: #33473C; margin-bottom: 14px; }
+.명세서-sub   { text-align: center; font-size: 13px; color: #a5b4fc; margin-bottom: 14px; }
 .명세서-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .명세서-table th, .명세서-table td { border: 1px solid #bbb; padding: 6px 8px; }
 .명세서-table th { background: #f5f5f5; font-weight: bold; text-align: center; }
@@ -188,17 +188,17 @@ body { display: flex; flex-direction: column; }
 /* ── 그룹 탭 ── */
 .group-tab-bar { flex-shrink: 0; display: flex; background: #0a0c13; border-bottom: 3px solid #1e2235; }
 .group-tab-btn { flex: 1; padding: 13px 0; text-align: center; font-size: 14px; font-weight: 800; color: #4a4f70; cursor: pointer; letter-spacing: 0.02em; border-bottom: 3px solid transparent; margin-bottom: -3px; }
-.group-tab-btn.active.daily   { color: #33473C; border-bottom-color: #6c7aff; }
-.group-tab-btn.active.longterm{ color: #6B8F71; border-bottom-color: #6B8F71; }
+.group-tab-btn.active.daily   { color: #fff; border-bottom-color: #6c7aff; }
+.group-tab-btn.active.longterm{ color: #fbbf24; border-bottom-color: #d97706; }
 #group-daily, #group-longterm { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
 /* ── 장기입실 테마 ── */
-.lt-root { --lt-bg:#F1E8D3; --lt-surface:#E8DCC0; --lt-surface2:#D8CBA8; --lt-border:#C4B898; --lt-accent:#E3A857; --lt-text:#33473C; --lt-sub:#4A6B5A; }
-#group-longterm { background: #F1E8D3; color: #33473C; }
+.lt-root { --lt-bg:#100c05; --lt-surface:#1c1609; --lt-surface2:#261e0c; --lt-border:#3d3218; --lt-accent:#d97706; --lt-text:#f0e6d0; --lt-sub:#a08050; }
+#group-longterm { background: #F1E8D3; color: #a5b4fc; }
 
-.lt-sub-tab-bar { flex-shrink: 0; display: flex; background: #D8CBA8; border-bottom: 1px solid #3d3218; }
-.lt-tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 700; color: #4A6B5A; cursor: pointer; border-bottom: 2px solid transparent; }
-.lt-tab-btn.active { color: #6B8F71; border-bottom-color: #6B8F71; }
+.lt-sub-tab-bar { flex-shrink: 0; display: flex; background: #12151f; border-bottom: 1px solid #3d3218; }
+.lt-tab-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 13px; font-weight: 700; color: #6b7199; cursor: pointer; border-bottom: 2px solid transparent; }
+.lt-tab-btn.active { color: #fbbf24; border-bottom-color: #d97706; }
 
 .lt-panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
 .lt-panel.active { display: flex; }
@@ -208,60 +208,60 @@ body { display: flex; flex-direction: column; }
 .lt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .lt-room-card { background: #1c1609; border: 1.5px solid #3d3218; border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; gap: 5px; }
 .lt-room-card:active { transform: scale(0.97); opacity: 0.85; }
-.lt-room-card.unpaid  { border-color: #E3A857; background: #FDE8C8; }
-.lt-room-card.paid    { border-color: #6B8F71; background: #D5EFDC; }
-.lt-room-card.partial { border-color: #E3A857; background: #FDE8C8; }
-.lt-room-card.expired { border-color: #C4B898; background: #DDD0AA; opacity: 0.65; }
+.lt-room-card.unpaid  { border-color: #fde047; background: #FDE8C8; }
+.lt-room-card.paid    { border-color: #16a34a; background: #0a1a0a; }
+.lt-room-card.partial { border-color: #fde047; background: #FDE8C8; }
+.lt-room-card.expired { border-color: #504030; background: #180f04; opacity: 0.65; }
 .lt-card-header { display: flex; justify-content: space-between; align-items: center; }
-.lt-room-num { font-size: 16px; font-weight: 800; color: #33473C; }
-.lt-room-client { font-size: 12px; color: #7A5A20; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lt-card-stats { display: flex; justify-content: space-between; font-size: 11px; color: #33473C; font-weight: 700; }
-.lt-card-price { font-size: 11px; color: #4A6B5A; }
-.lt-card-checks { display: flex; gap: 5px; flex-wrap: wrap; padding-top: 2px; border-top: 1px solid #C4B898; }
+.lt-room-num { font-size: 16px; font-weight: 800; color: #a5b4fc; }
+.lt-room-client { font-size: 12px; color: #d97706; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-card-stats { display: flex; justify-content: space-between; font-size: 11px; color: #a5b4fc; font-weight: 700; }
+.lt-card-price { font-size: 11px; color: #6b7199; }
+.lt-card-checks { display: flex; gap: 5px; flex-wrap: wrap; padding-top: 2px; border-top: 1px solid #3d3218; }
 .lt-check-item { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
 .lt-check-item.done    { background: #052e16; color: #6B8F71; }
-.lt-check-item.pending { background: #FDE8C8; color: #7A4A20; }
-.expired-text { color: #9A8A6A !important; }
+.lt-check-item.pending { background: #2a1006; color: #d97706; }
+.expired-text { color: #6b5030 !important; }
 .lt-pay-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
 .lt-pay-badge.done    { background: #052e16; color: #6B8F71; }
-.lt-pay-badge.partial { background: #FDE8C8; color: #7A4A20; }
+.lt-pay-badge.partial { background: #2d1a00; color: #fbbf24; }
 .lt-pay-badge.pending { background: #1f1108; color: #C1704F; }
 
 /* 계약 목록 아이템 */
-.lt-list-item { background: #E8DCC0; border: 1px solid #C4B898; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+.lt-list-item { background: #1e2132; border: 1px solid #C4B898; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
 .lt-list-item:active { opacity: 0.8; }
 
 /* 신규 계약 버튼 */
-.lt-new-btn { flex-shrink: 0; margin: 0 14px 14px; padding: 14px; background: #D5EFDC; border: 1.5px solid #6B8F71; border-radius: 12px; color: #33473C; font-size: 15px; font-weight: 800; cursor: pointer; text-align: center; }
-.lt-new-btn:active { background: #C5E0CB; }
+.lt-new-btn { flex-shrink: 0; margin: 0 14px 14px; padding: 14px; background: #D5EFDC; border: 1.5px solid #6B8F71; border-radius: 12px; color: #a5b4fc; font-size: 15px; font-weight: 800; cursor: pointer; text-align: center; }
+.lt-new-btn:active { background: #3d2a0e; }
 
 /* 장기 모달 */
 .lt-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; }
 .lt-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1609; border-radius: 20px 20px 0 0; padding: 20px 16px 36px; z-index: 201; display: none; max-height: 92vh; overflow-y: auto; border-top: 2px solid #d97706; }
-.lt-sec-label { font-size: 11px; font-weight: 700; color: #4A6B5A; letter-spacing: 0.05em; margin-bottom: 8px; }
+.lt-sec-label { font-size: 11px; font-weight: 700; color: #6b7199; letter-spacing: 0.05em; margin-bottom: 8px; }
 .lt-section { margin-bottom: 16px; }
-.lt-input { width: 100%; background: #261e0c; border: 1px solid #3d3218; border-radius: 8px; color: #33473C; padding: 10px 12px; font-size: 15px; outline: none; }
-.lt-input:focus { border-color: #E3A857; }
+.lt-input { width: 100%; background: #261e0c; border: 1px solid #3d3218; border-radius: 8px; color: #a5b4fc; padding: 10px 12px; font-size: 15px; outline: none; }
+.lt-input:focus { border-color: #fde047; }
 .lt-row2 { display: flex; gap: 8px; }
 .lt-row2 > * { flex: 1; }
 
 /* 객실 칩 */
 .lt-room-chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 110px; overflow-y: auto; }
-.lt-room-chip { padding: 6px 10px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #4A6B5A; font-size: 13px; font-weight: 700; cursor: pointer; }
-.lt-room-chip.selected { border-color: #E3A857; background: #C5E0CB; color: #fbbf24; }
+.lt-room-chip { padding: 6px 10px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #6b7199; font-size: 13px; font-weight: 700; cursor: pointer; }
+.lt-room-chip.selected { border-color: #fde047; background: #3d2a0e; color: #fbbf24; }
 
 /* 고객 칩 */
 .lt-client-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.lt-client-chip { padding: 8px 14px; border-radius: 20px; border: 1.5px solid #3d3218; background: #261e0c; color: #4A6B5A; font-size: 13px; font-weight: 600; cursor: pointer; }
-.lt-client-chip.selected { border-color: #E3A857; background: #C5E0CB; color: #fbbf24; }
+.lt-client-chip { padding: 8px 14px; border-radius: 20px; border: 1.5px solid #3d3218; background: #261e0c; color: #6b7199; font-size: 13px; font-weight: 600; cursor: pointer; }
+.lt-client-chip.selected { border-color: #fde047; background: #3d2a0e; color: #fbbf24; }
 
 /* 지급방법 */
 .lt-pay-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-.lt-pay-btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #4A6B5A; font-size: 13px; font-weight: 600; cursor: pointer; }
-.lt-pay-btn.selected { border-color: #E3A857; background: #C5E0CB; color: #fbbf24; }
+.lt-pay-btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #6b7199; font-size: 13px; font-weight: 600; cursor: pointer; }
+.lt-pay-btn.selected { border-color: #fde047; background: #3d2a0e; color: #fbbf24; }
 
 /* 체크리스트 */
-.lt-check-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #33473C; padding: 6px 0; cursor: pointer; }
+.lt-check-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #a5b4fc; padding: 6px 0; cursor: pointer; }
 .lt-check-label input[type=checkbox] { width: 18px; height: 18px; accent-color: #d97706; }
 .lt-done-badge { display: inline-block; background: #052e16; color: #6B8F71; font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 20px; margin-top: 6px; }
 
@@ -270,8 +270,8 @@ body { display: flex; flex-direction: column; }
 
 /* 모달 버튼 */
 .lt-btn-row { display: flex; gap: 10px; margin-top: 4px; }
-.lt-btn-del  { flex: 1; padding: 14px; border: 1px solid #C1704F; border-radius: 10px; background: #F5DDD5; color: #C1704F; font-size: 14px; font-weight: 700; cursor: pointer; display: none; }
-.lt-btn-cancel { flex: 1; padding: 14px; border: 1px solid #3d3218; border-radius: 10px; background: #261e0c; color: #4A6B5A; font-size: 15px; font-weight: 700; cursor: pointer; }
+.lt-btn-del  { flex: 1; padding: 14px; border: 1px solid #5c1a1a; border-radius: 10px; background: #1a0909; color: #C1704F; font-size: 14px; font-weight: 700; cursor: pointer; display: none; }
+.lt-btn-cancel { flex: 1; padding: 14px; border: 1px solid #3d3218; border-radius: 10px; background: #261e0c; color: #6b7199; font-size: 15px; font-weight: 700; cursor: pointer; }
 .lt-btn-save { flex: 2; padding: 14px; border: none; border-radius: 10px; background: #d97706; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
 
 /* ── 빈 상태 / 토스트 ── */
