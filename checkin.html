@@ -259,6 +259,8 @@ body { display: flex; flex-direction: column; }
 .lt-client-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .lt-client-chip { padding: 8px 14px; border-radius: 20px; border: 1.5px solid #3d3218; background: #261e0c; color: #6b7199; font-size: 13px; font-weight: 600; cursor: pointer; }
 .lt-client-chip.selected { border-color: #fde047; background: #3d2a0e; color: #fbbf24; }
+.lt-room-move-btn { margin-left: 8px; padding: 4px 10px; border-radius: 8px; border: 1px solid #3d3218; background: #261e0c; color: #a08050; font-size: 12px; font-weight: 700; cursor: pointer; }
+.lt-room-move-hint { grid-column: 1/-1; font-size: 11px; color: #a08050; margin-bottom: 4px; width: 100%; }
 
 /* 지급방법 */
 .lt-pay-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -1112,6 +1114,7 @@ function ltSetStatus(msg) {
 }
 
 var ltModal = {};
+var ltRoomMoving = false; // 기존 계약 수정 중 "다른 호실로 이동" 선택 모드 여부
 
 // ── 그룹 탭 전환 ─────────────────────────────────────
 function switchGroupTab(tab) {
@@ -1261,6 +1264,7 @@ function renderLtList() {
 function openLtModal(id, preRoom) {
   var contracts = getLtContracts();
   var existing = id ? contracts.find(function(c){ return c.id===id; }) : null;
+  ltRoomMoving = false;
   if (existing) {
     ltModal = JSON.parse(JSON.stringify(existing));
   } else {
@@ -1301,13 +1305,39 @@ function renderLtModalFull() {
 
 function renderLtRoomChips() {
   var el = document.getElementById('ltRoomChips');
-  if (ltModal.id) { el.innerHTML='<span style="font-size:16px;font-weight:800;color:#d97706">'+ltModal.room+'호</span>'; return; }
+  if (ltModal.id && !ltRoomMoving) {
+    el.innerHTML = '<span style="font-size:16px;font-weight:800;color:#d97706">'+ltModal.room+'호</span>'
+      + '<button type="button" class="lt-room-move-btn" onclick="toggleLtRoomMove()">🔁 다른 호실로 이동</button>';
+    return;
+  }
   var allRooms = Object.values(FIXED_FLOORS).reduce(function(a,b){ return a.concat(b); },[]);
-  el.innerHTML = allRooms.map(function(r){
+  var hint = ltModal.id ? '<div class="lt-room-move-hint">이동할 호실을 선택하세요 (기존 설정값은 그대로 유지됩니다) · <span style="cursor:pointer;text-decoration:underline" onclick="cancelLtRoomMove()">취소</span></div>' : '';
+  el.innerHTML = hint + allRooms.map(function(r){
     return '<div class="lt-room-chip'+(r===ltModal.room?' selected':'')+'" onclick="ltPickRoom(\''+r+'\')">'+r+'</div>';
   }).join('');
 }
-function ltPickRoom(room) { ltModal.room=room; renderLtRoomChips(); }
+
+function toggleLtRoomMove() { ltRoomMoving = true; renderLtRoomChips(); }
+function cancelLtRoomMove() { ltRoomMoving = false; renderLtRoomChips(); }
+
+function ltPickRoom(room) {
+  if (ltModal.id && room !== ltModal.room) {
+    var conflict = getLtContracts().find(function(c) {
+      return c.id !== ltModal.id && c.room === room &&
+        !(c.endDate < ltModal.startDate || c.startDate > ltModal.endDate);
+    });
+    if (conflict) {
+      var ok = confirm(room + '호에 이미 계약이 있습니다 (' + conflict.client + ', ' + conflict.startDate + '~' + conflict.endDate + ').\n그래도 이동하시겠습니까?');
+      if (!ok) return;
+    }
+  }
+  ltModal.room = room;
+  if (ltModal.id) {
+    ltRoomMoving = false;
+    document.getElementById('ltModalTitle').textContent = ltModal.room + '호 계약 수정';
+  }
+  renderLtRoomChips();
+}
 
 function renderLtClientChips() {
   var chips = clients.map(function(c){
