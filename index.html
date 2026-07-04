@@ -54,7 +54,7 @@ body { display: flex; flex-direction: column; }
 @media (min-width: 768px) { .room-grid { grid-template-columns: repeat(5, 1fr); } }
 
 .room-card { border-radius: 12px; border: 1px solid; padding: 10px 8px; min-height: 78px; display: flex; flex-direction: column; gap: 3px; position: relative; }
-.room-card.stay { cursor: pointer; }
+.room-card.stay, .room-card.out { cursor: pointer; }
 .room-card.reentry-tag { font-size: 10px; color: #2dd4bf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .room-card.vacant   { background: #0d2b1a; border-color: #1a5c35; }
 .room-card.dirty    { background: #2b1500; border-color: #5c3500; }
@@ -426,7 +426,7 @@ function renderGrid() {
     const sub = r.checkinTime
       ? (r.checkoutTime ? r.checkinTime + ' → ' + r.checkoutTime : r.checkinTime)
       : '';
-    html.push(`<div class="room-card ${cls}" ${cls === 'stay' ? `onclick="openReentryModal('${r.room}')"` : ''}>
+    html.push(`<div class="room-card ${cls}" ${(cls === 'stay' || cls === 'out') ? `onclick="openReentryModal('${r.room}')"` : ''}>
       ${r.occupied ? '<div class="occupied-dot"></div>' : ''}
       <div class="room-number">${r.room}</div>
       <div class="room-status">${label}</div>
