@@ -54,6 +54,8 @@ body { display: flex; flex-direction: column; }
 @media (min-width: 768px) { .room-grid { grid-template-columns: repeat(5, 1fr); } }
 
 .room-card { border-radius: 12px; border: 1px solid; padding: 10px 8px; min-height: 78px; display: flex; flex-direction: column; gap: 3px; position: relative; }
+.room-card.stay { cursor: pointer; }
+.room-card.reentry-tag { font-size: 10px; color: #2dd4bf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .room-card.vacant   { background: #0d2b1a; border-color: #1a5c35; }
 .room-card.dirty    { background: #2b1500; border-color: #5c3500; }
 .room-card.stay     { background: #0d1b3b; border-color: #1e3a7a; }
@@ -244,6 +246,20 @@ body { display: flex; flex-direction: column; }
   </div>
 </div>
 
+<!-- 재입실후보 지정 모달 -->
+<div class="modal-overlay" id="reentryModal" onclick="closeOutside(event,'reentryModal')">
+  <div class="modal">
+    <div class="modal-title">🔁 재입실후보 지정</div>
+    <div style="font-size:13px;color:var(--text-sub);margin-bottom:10px" id="reentryRoomLabel"></div>
+    <input class="modal-input" id="reentryClient" type="text" placeholder="업체명/고객명 (예: 벽암산업)">
+    <div style="font-size:12px;color:var(--text-sub);margin-top:8px">다음날 짐체크 시 자동으로 대조해서, 짐이 있으면 정상 재입실로, 짐이 없으면 확인 필요로 알려드립니다.</div>
+    <div class="modal-footer">
+      <button class="btn-cancel"  onclick="closeModal('reentryModal')">취소</button>
+      <button class="btn-confirm" onclick="submitReentry()">지정</button>
+    </div>
+  </div>
+</div>
+
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
 
@@ -410,7 +426,7 @@ function renderGrid() {
     const sub = r.checkinTime
       ? (r.checkoutTime ? r.checkinTime + ' → ' + r.checkoutTime : r.checkinTime)
       : '';
-    html.push(`<div class="room-card ${cls}">
+    html.push(`<div class="room-card ${cls}" ${cls === 'stay' ? `onclick="openReentryModal('${r.room}')"` : ''}>
       ${r.occupied ? '<div class="occupied-dot"></div>' : ''}
       <div class="room-number">${r.room}</div>
       <div class="room-status">${label}</div>
@@ -533,6 +549,34 @@ async function submitReservation() {
     });
     showToast(selectedReserveRoom + '호 예약 요청 완료' + (important === '1' ? ' · 캘린더 등록됨' : ''));
     setTimeout(loadResLog, 2000);
+  } catch (e) {
+    showToast('전송 오류 — 잠시 후 확인해주세요');
+  }
+}
+
+// ── 재입실후보 지정 ──────────────────────────
+let selectedReentryRoom = null;
+
+function openReentryModal(room) {
+  selectedReentryRoom = room;
+  document.getElementById('reentryRoomLabel').textContent = room + '호를 재입실후보로 지정합니다. (재입실 확정이 아니라 다음날 확인이 필요한 객실로만 표시됩니다)';
+  document.getElementById('reentryClient').value = '';
+  openModal('reentryModal');
+}
+
+async function submitReentry() {
+  const client = document.getElementById('reentryClient').value.trim();
+  if (!client) { showToast('업체명/고객명을 입력해주세요'); return; }
+  const room = selectedReentryRoom;
+  closeModal('reentryModal');
+
+  try {
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=mark_reentry_candidate&room=${encodeURIComponent(room)}&client=${encodeURIComponent(client)}`
+    });
+    showToast(room + '호 재입실후보 지정 완료 (' + client + ')');
   } catch (e) {
     showToast('전송 오류 — 잠시 후 확인해주세요');
   }
