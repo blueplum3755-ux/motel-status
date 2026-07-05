@@ -43,10 +43,18 @@
   .room-card.tappable{ cursor:pointer; }
   .room-card .num{ font-size:14px; font-weight:800; color:#0f172a; }
   .room-card .state{ font-size:12px; font-weight:700; color:var(--gray-text); margin-top:2px; }
-  .room-card.occupied{ background:var(--red-bg); border-color:var(--red-border); }
-  .room-card.occupied .num{ color:var(--red-text); }
-  .room-card.occupied .state{ color:var(--red-text); }
+  .room-card.hasluggage{ background:var(--red-bg); border-color:var(--red-border); }
+  .room-card.hasluggage .num{ color:var(--red-text); }
+  .room-card.hasluggage .state{ color:var(--red-text); }
   .room-card.readonly{ cursor:default; }
+  .room-card.long{ opacity:.55; cursor:default; }
+  .room-card.long .num{ color:#94a3b8; }
+
+  .badge{ font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px; margin-bottom:3px; line-height:1.5; }
+  .badge-long{ background:#e2e8f0; color:#64748b; }
+  .badge-occupied{ background:#dbeafe; color:#1d4ed8; }
+  .badge-checkneeded{ background:#fef3c7; color:#b45309; }
+  .badge-vacant{ background:#f1f5f9; color:#94a3b8; }
 
   nav.tabbar{
     position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
@@ -144,9 +152,28 @@ let rooms = {};
 ALL_ROOMS.forEach(r => rooms[r] = false);
 let dirty = false;
 let sessions = [];
+let roomMeta = {};
 let currentTab = 'check';
 let openSessionId = null;
 let dataReady = false;
+
+/* ── 객실 RMS 상태 분류 ─────────────────────────
+   long        : 장기객실 → 짐체크 비활성화, "장기" 표시
+   occupied    : 현재 키삽입(입실중) → 짐체크 가능, "손님있음" 표시
+   checkneeded : 어제(06:00~오늘06:00) 입실이력 있음 → 짐체크 가능, "확인필요" 표시
+   vacant      : 그 외(어제 숙박이력 없음) → 짐체크 가능, "공실" 표시             */
+const RMS_BADGE = { long: '장기', occupied: '손님있음', checkneeded: '확인필요', vacant: '공실' };
+function classifyRoom(room){
+  const m = roomMeta[String(room)];
+  if(!m) return 'vacant';
+  if(m.type === 'long') return 'long';
+  if(m.type === 'normal' && m.occupied) return 'occupied';
+  if(m.hadStayYesterday) return 'checkneeded';
+  return 'vacant';
+}
+function checkableRooms(){
+  return ALL_ROOMS.filter(r => classifyRoom(r) !== 'long');
+}
 
 const mainEl = document.getElementById('main');
 const toastEl = document.getElementById('toast');
@@ -192,17 +219,31 @@ function fetchJsonp(url) {
 }
 
 async function loadSessions(){
-  try{
-    sessions = await fetchJsonp(API + '?action=luggage_sessions') || [];
+  const [sessRes, dataRes] = await Promise.allSettled([
+    fetchJsonp(API + '?action=luggage_sessions'),
+    fetchJsonp(API + '?action=data')
+  ]);
+
+  if(sessRes.status === 'fulfilled'){
+    sessions = sessRes.value || [];
     const today = sessions.find(s => s.id === todayKey());
     if(today){
       ALL_ROOMS.forEach(r => rooms[r] = !!today.rooms[String(r)]);
     }
-  }catch(e){
-    console.error(e);
+  }else{
+    console.error(sessRes.reason);
     sessions = [];
-    showToast('데이터를 불러오지 못했습니다');
+    showToast('저장 기록을 불러오지 못했습니다');
   }
+
+  if(dataRes.status === 'fulfilled' && dataRes.value && dataRes.value.rooms){
+    roomMeta = {};
+    dataRes.value.rooms.forEach(r => { roomMeta[String(r.room)] = r; });
+  }else{
+    console.error(dataRes.reason);
+    showToast('객실현황 정보를 불러오지 못했습니다');
+  }
+
   dataReady = true;
   updateCheckingLabel();
   render();
@@ -226,20 +267,25 @@ function renderCheckScreen(){
   FLOORS.forEach(f=>{
     html += `<div class="floor-block"><div class="floor-title">${f.name}</div><div class="room-grid">`;
     f.rooms.forEach(r=>{
-      const occ = rooms[r];
-      html += `<div class="room-card tappable ${occ?'occupied':''}" data-room="${r}">
-        <div class="num">${r}</div><div class="state">${occ?'짐있음':'공실'}</div></div>`;
+      const cls = classifyRoom(r);
+      const isLong = cls === 'long';
+      const occ = !isLong && rooms[r];
+      html += `<div class="room-card ${isLong?'long':'tappable'} ${occ?'hasluggage':''}" data-room="${r}">
+        <div class="badge badge-${cls}">${RMS_BADGE[cls]}</div>
+        <div class="num">${r}</div>
+        ${isLong ? '' : `<div class="state">${occ?'짐있음':'짐없음'}</div>`}
+      </div>`;
     });
     html += `</div></div>`;
   });
   mainEl.innerHTML = html;
-  mainEl.querySelectorAll('.room-card').forEach(card=>{
+  mainEl.querySelectorAll('.room-card.tappable').forEach(card=>{
     attachTapHandler(card, ()=>{
       const r = card.dataset.room;
       rooms[r] = !rooms[r];
       dirty = true;
-      card.classList.toggle('occupied', rooms[r]);
-      card.querySelector('.state').textContent = rooms[r] ? '짐있음' : '공실';
+      card.classList.toggle('hasluggage', rooms[r]);
+      card.querySelector('.state').textContent = rooms[r] ? '짐있음' : '짐없음';
       updateCheckingLabel();
     });
   });
@@ -333,8 +379,8 @@ function renderReadonlyRooms(snapshotRooms){
     html += `<div class="floor-block" style="margin-top:14px;"><div class="floor-title">${f.name}</div><div class="room-grid">`;
     f.rooms.forEach(r=>{
       const occ = !!snapshotRooms[r];
-      html += `<div class="room-card readonly ${occ?'occupied':''}">
-        <div class="num">${r}</div><div class="state">${occ?'짐있음':'공실'}</div></div>`;
+      html += `<div class="room-card readonly ${occ?'hasluggage':''}">
+        <div class="num">${r}</div><div class="state">${occ?'짐있음':'짐없음'}</div></div>`;
     });
     html += `</div></div>`;
   });
@@ -342,14 +388,15 @@ function renderReadonlyRooms(snapshotRooms){
 }
 
 function renderSaveModalContent(){
-  const total = ALL_ROOMS.length;
-  const occCount = ALL_ROOMS.filter(r=> rooms[r]).length;
+  const targetRooms = checkableRooms();
+  const total = targetRooms.length;
+  const occCount = targetRooms.filter(r=> rooms[r]).length;
   const emptyCount = total - occCount;
   document.getElementById('saveModalContent').innerHTML = `
     <h2>현재 시점 기록을 저장할까요?</h2>
     <div class="summary-bar">
       <div class="item"><div class="n">${total}</div><div class="l">전체 객실</div></div>
-      <div class="item"><div class="n">${emptyCount}</div><div class="l">공실</div></div>
+      <div class="item"><div class="n">${emptyCount}</div><div class="l">짐없음</div></div>
       <div class="item warn"><div class="n">${occCount}</div><div class="l">짐있음</div></div>
     </div>
     <div class="modal-btn-row">
@@ -376,7 +423,7 @@ function closeSaveModal(){
 }
 
 async function doSave(){
-  const results = ALL_ROOMS.map(r => r + '=' + (rooms[r] ? 'yes' : 'no')).join(',');
+  const results = checkableRooms().map(r => r + '=' + (rooms[r] ? 'yes' : 'no')).join(',');
   try{
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
