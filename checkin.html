@@ -232,8 +232,10 @@ body { display: flex; flex-direction: column; }
 .lt-pay-badge.partial { background: #2d1a00; color: #fbbf24; }
 .lt-pay-badge.pending { background: #1f1108; color: #C1704F; }
 
-/* 계약 목록 아이템 */
-.lt-list-item { background: #1e2132; border: 1px solid #C4B898; border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+/* 계약 목록 아이템 (업체별 가나다순, 2열 그리드) */
+#ltContractList { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+#ltContractList .empty-state { grid-column: 1 / -1; }
+.lt-list-item { background: #1e2132; border: 1px solid #C4B898; border-radius: 12px; padding: 14px; cursor: pointer; }
 .lt-list-item:active { opacity: 0.8; }
 
 /* 신규 계약 버튼 */
@@ -1254,7 +1256,7 @@ function buildLtRoomCard(room, contract) {
 
 // ── 계약 목록 ─────────────────────────────────────────
 function renderLtList() {
-  var contracts = getLtContracts().slice().sort(function(a,b){ return b.startDate.localeCompare(a.startDate); });
+  var contracts = getLtContracts().slice().sort(function(a,b){ return (a.client||'').localeCompare(b.client||'', 'ko'); });
   if (!contracts.length) {
     document.getElementById('ltContractList').innerHTML = '<div class="empty-state" style="color:#a08050">계약 내역 없음</div>';
     return;
