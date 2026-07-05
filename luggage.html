@@ -53,6 +53,7 @@
   .badge{ font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px; margin-bottom:3px; line-height:1.5; }
   .badge-long{ background:#e2e8f0; color:#64748b; }
   .badge-occupied{ background:#dbeafe; color:#1d4ed8; }
+  .badge-unregistered{ background:#fce7f3; color:#be185d; }
   .badge-checkneeded{ background:#fef3c7; color:#b45309; }
   .badge-vacant{ background:#f1f5f9; color:#94a3b8; }
 
@@ -158,16 +159,18 @@ let openSessionId = null;
 let dataReady = false;
 
 /* ── 객실 RMS 상태 분류 ─────────────────────────
-   long        : 장기객실 → 짐체크 비활성화, "장기" 표시
-   occupied    : 현재 키삽입(입실중) → 짐체크 가능, "손님있음" 표시
-   checkneeded : 어제(06:00~오늘06:00) 입실이력 있음 → 짐체크 가능, "확인필요" 표시
-   vacant      : 그 외(어제 숙박이력 없음) → 짐체크 가능, "공실" 표시             */
-const RMS_BADGE = { long: '장기', occupied: '손님있음', checkneeded: '확인필요', vacant: '공실' };
+   long         : 장기객실 → 짐체크 비활성화, "장기" 표시
+   occupied     : 현재 키삽입(입실중) → 짐체크 가능, "손님있음" 표시
+   unregistered : 키/체크인 이력은 없지만 어제 짐체크로 확인된 숙박(자동감지) → 짐체크 가능, "미기록입실" 표시
+   checkneeded  : 어제(06:00~오늘06:00) 입실이력 있음 → 짐체크 가능, "확인필요" 표시
+   vacant       : 그 외(어제 숙박이력 없음) → 짐체크 가능, "공실" 표시             */
+const RMS_BADGE = { long: '장기', occupied: '손님있음', unregistered: '미기록입실', checkneeded: '확인필요', vacant: '공실' };
 function classifyRoom(room){
   const m = roomMeta[String(room)];
   if(!m) return 'vacant';
   if(m.type === 'long') return 'long';
   if(m.type === 'normal' && m.occupied) return 'occupied';
+  if(m.reentryHold && m.unregisteredStay) return 'unregistered';
   if(m.hadStayYesterday) return 'checkneeded';
   return 'vacant';
 }

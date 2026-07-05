@@ -366,7 +366,7 @@ function statusLabel(cls, r) {
     out:  r.checkinLabel || '외출중',
     long: r.occupied ? '장기(在)' : '장기',
     reserved:'예약', luggage:'재숙',
-    reentryhold: '확인필요(' + (r.reentryHoldClient||'') + ')'
+    reentryhold: r.unregisteredStay ? '미기록입실' : ('확인필요(' + (r.reentryHoldClient||'') + ')')
   };
   return map[cls] || cls;
 }
@@ -640,7 +640,10 @@ function openReentryResolveModal(room) {
   selectedReentryResolveRoom = room;
   const r = allRooms.find(x => x.room === room);
   const client = (r && r.reentryHoldClient) || '';
-  document.getElementById('reentryResolveLabel').textContent = room + '호는 ' + client + '(으)로 재입실이 예상됐던 객실입니다.';
+  const label = (r && r.unregisteredStay)
+    ? (room + '호는 어제 짐이 확인됐으나 입실기록(키삽입)이 없는 객실입니다.')
+    : (room + '호는 ' + client + '(으)로 재입실이 예상됐던 객실입니다.');
+  document.getElementById('reentryResolveLabel').textContent = label;
   openModal('reentryResolveModal');
 }
 
