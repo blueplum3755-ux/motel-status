@@ -270,6 +270,10 @@ function getRoomLiveState(roomNum) {
   // 확인필요: 일반투숙 외출중(OUT) 또는 퇴실(EMPTY)인데 입실 이력 있음
   if (r.type === 'normal' && !r.occupied) return 'todo';
 
+  // RMS가 이미 공실(EMPTY)로 전환했더라도, 장기 제외 전날 숙박이력(키삽입)이 있으면
+  // 짐체크 대상에서 빠지면 안 됨 (짐체크 목적 자체가 "퇴실 후 공실 전환된 방" 확인이므로)
+  if (r.needsLuggageCheck) return 'todo';
+
   // 공실 (EMPTY + 입실이력 없음)
   return 'empty';
 }
