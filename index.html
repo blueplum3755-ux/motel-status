@@ -54,8 +54,11 @@ body { display: flex; flex-direction: column; }
 @media (min-width: 768px) { .room-grid { grid-template-columns: repeat(5, 1fr); } }
 
 .room-card { border-radius: 12px; border: 1px solid; padding: 10px 8px; min-height: 78px; display: flex; flex-direction: column; gap: 3px; position: relative; }
-.room-card.stay, .room-card.out { cursor: pointer; }
+.room-card.stay, .room-card.out, .room-card.reentryhold { cursor: pointer; }
 .room-card.reentry-tag { font-size: 10px; color: #2dd4bf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.room-card.reentryhold { background: #2b0d24; border-color: #f472b6; }
+.room-card.reentryhold .room-number { color: #f472b6; }
+.room-card.reentryhold .room-status { color: #f9a8d4; }
 .room-card.vacant   { background: #0d2b1a; border-color: #1a5c35; }
 .room-card.dirty    { background: #2b1500; border-color: #5c3500; }
 .room-card.stay     { background: #0d1b3b; border-color: #1e3a7a; }
@@ -261,6 +264,19 @@ body { display: flex; flex-direction: column; }
   </div>
 </div>
 
+<!-- 재입실 확인필요 해제 모달 -->
+<div class="modal-overlay" id="reentryResolveModal" onclick="closeOutside(event,'reentryResolveModal')">
+  <div class="modal">
+    <div class="modal-title">🔁 재입실 확인</div>
+    <div style="font-size:13px;color:var(--text-sub);margin-bottom:14px" id="reentryResolveLabel"></div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:14px">짐이 없는 상태로 확인됐습니다. 직접 확인 후 아래에서 선택해주세요.</div>
+    <div class="modal-footer">
+      <button class="btn-cancel"  onclick="resolveReentry('vacant')">공실 확인됨 (판매 가능)</button>
+      <button class="btn-confirm" onclick="resolveReentry('reentry')">재입실 확인됨 (보류 유지)</button>
+    </div>
+  </div>
+</div>
+
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
 
@@ -332,6 +348,7 @@ function switchTab(tab) {
 
 // ── 분류 ───────────────────────────────────
 function classify(r) {
+  if (r.reentryHold)                              return 'reentryhold'; // 재입실확인필요 (판매보류)
   if (r.type === 'long')                          return 'long';
   if (r.type === 'normal' && r.occupied)          return 'stay';   // 방 안(USING)
   if (r.type === 'normal' && !r.occupied)         return 'out';    // 외출(OUT)
@@ -347,7 +364,8 @@ function statusLabel(cls, r) {
     stay: r.checkinLabel || '입실중',
     out:  r.checkinLabel || '외출중',
     long: r.occupied ? '장기(在)' : '장기',
-    reserved:'예약', luggage:'재숙'
+    reserved:'예약', luggage:'재숙',
+    reentryhold: '확인필요(' + (r.reentryHoldClient||'') + ')'
   };
   return map[cls] || cls;
 }
@@ -372,6 +390,7 @@ function renderHeader() {
     { label:'청소필요',count: allRooms.filter(r => r.needsClean).length,                      color:'#fb923c' },
     { label:'예약',   count: allRooms.filter(r => r.isReserved).length,                       color:'#fcd34d' },
     { label:'재숙',   count: allRooms.filter(r => r.checkinLabel === '재숙').length,           color:'#2dd4bf' },
+    { label:'재입실확인필요', count: allRooms.filter(r => r.reentryHold).length,              color:'#f472b6' },
   ].filter(c => c.count > 0);
 
   document.getElementById('statRow').innerHTML = chips.map(c =>
@@ -390,12 +409,12 @@ function selectStatusTab(s) { currentStatusTab = s; renderStatusTabs(); renderGr
 function getRoomsForTab(tab) {
   if (tab === 'all')      return allRooms;
   if (tab === 'keyin')    return allRooms.filter(r => r.occupied && (r.type === 'normal' || r.type === 'long'));
-  if (tab === 'vacant')   return allRooms.filter(r => r.type === 'empty' && r.checkinLabel !== '재숙' && !r.isReserved);
+  if (tab === 'vacant')   return allRooms.filter(r => r.type === 'empty' && r.checkinLabel !== '재숙' && !r.isReserved && !r.reentryHold);
   if (tab === 'reserved') return allRooms.filter(r => r.isReserved);
   return allRooms;
 }
 
-const SORT_ORDER = { reserved: 0, vacant: 1, long: 2, luggage: 3, stay: 4, out: 5, dirty: 6 };
+const SORT_ORDER = { reentryhold: 0, reserved: 1, vacant: 2, long: 3, luggage: 4, stay: 5, out: 6, dirty: 7 };
 
 function renderGrid() {
   const rooms = getRoomsForTab(currentStatusTab)
@@ -409,7 +428,7 @@ function renderGrid() {
     document.getElementById('roomGrid').innerHTML = '<div class="loading" style="grid-column:1/-1">객실 없음</div>';
     return;
   }
-  const GROUP_LABEL = { reserved:'예약', vacant:'공실', long:'장기', luggage:'재숙', stay:'입실중', out:'외출중', dirty:'청소필요' };
+  const GROUP_LABEL = { reentryhold:'재입실확인필요', reserved:'예약', vacant:'공실', long:'장기', luggage:'재숙', stay:'입실중', out:'외출중', dirty:'청소필요' };
   let lastCls = null;
   const html = [];
   rooms.forEach(r => {
@@ -427,7 +446,7 @@ function renderGrid() {
     const sub = r.checkinTime
       ? (r.checkoutTime ? r.checkinTime + ' → ' + r.checkoutTime : r.checkinTime)
       : '';
-    html.push(`<div class="room-card ${cls}" ${(cls === 'stay' || cls === 'out') ? `onclick="openReentryModal('${r.room}')"` : ''}>
+    html.push(`<div class="room-card ${cls}" ${(cls === 'stay' || cls === 'out') ? `onclick="openReentryModal('${r.room}')"` : (cls === 'reentryhold' ? `onclick="openReentryResolveModal('${r.room}')"` : '')}>
       ${r.occupied ? '<div class="occupied-dot"></div>' : ''}
       <div class="room-number">${r.room}</div>
       <div class="room-status">${label}</div>
@@ -608,6 +627,35 @@ async function submitReentry() {
       body: `action=mark_reentry_candidate&room=${encodeURIComponent(room)}&client=${encodeURIComponent(client)}`
     });
     showToast(room + '호 재입실후보 지정 완료 (' + client + ')');
+  } catch (e) {
+    showToast('전송 오류 — 잠시 후 확인해주세요');
+  }
+}
+
+// ── 재입실 확인필요 해제 ──────────────────────
+let selectedReentryResolveRoom = null;
+
+function openReentryResolveModal(room) {
+  selectedReentryResolveRoom = room;
+  const r = allRooms.find(x => x.room === room);
+  const client = (r && r.reentryHoldClient) || '';
+  document.getElementById('reentryResolveLabel').textContent = room + '호는 ' + client + '(으)로 재입실이 예상됐던 객실입니다.';
+  openModal('reentryResolveModal');
+}
+
+async function resolveReentry(result) {
+  const room = selectedReentryResolveRoom;
+  closeModal('reentryResolveModal');
+  if (!room) return;
+
+  try {
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `action=resolve_reentry_candidate&room=${encodeURIComponent(room)}&result=${encodeURIComponent(result)}`
+    });
+    showToast(room + '호 ' + (result === 'vacant' ? '판매 가능으로 전환됨' : '재입실 확인됨 (계속 보류)'));
+    loadData();
   } catch (e) {
     showToast('전송 오류 — 잠시 후 확인해주세요');
   }
