@@ -1331,6 +1331,19 @@ function renderLtRoomChips() {
     return;
   }
   var allRooms = Object.values(FIXED_FLOORS).reduce(function(a,b){ return a.concat(b); },[]);
+
+  // 신규 등록(수정/이동 모드가 아닌 경우)일 때는, 아직 만료되지 않은(마감일이 오늘 이후인)
+  // 계약이 있는 객실은 목록에서 아예 제외해 중복 등록을 방지합니다.
+  // (기존 계약 수정/이동 시에는 자기 자신 제외 conflict 확인 방식을 그대로 유지)
+  if (!ltModal.id) {
+    var today = toDateStr(new Date());
+    var takenRooms = {};
+    getLtContracts().forEach(function(c) {
+      if (c.endDate >= today) takenRooms[c.room] = true;
+    });
+    allRooms = allRooms.filter(function(r) { return !takenRooms[r]; });
+  }
+
   var hint = ltModal.id ? '<div class="lt-room-move-hint">이동할 호실을 선택하세요 (기존 설정값은 그대로 유지됩니다) · <span style="cursor:pointer;text-decoration:underline" onclick="cancelLtRoomMove()">취소</span></div>' : '';
   el.innerHTML = hint + allRooms.map(function(r){
     return '<div class="lt-room-chip'+(r===ltModal.room?' selected':'')+'" onclick="ltPickRoom(\''+r+'\')">'+r+'</div>';
