@@ -2,21 +2,428 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>짐 체크 - 이동 중</title>
-<meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbyE7dzVtK6RIE3eUITU61CfqDeEt_5NH5utTxEyG8O4h1LfLuxy3W01LMJfdF_lxv2l/exec">
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>객실 공실체크</title>
 <style>
-body { font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f0f2f5; color:#1a1a2e; text-align:center; padding:24px; }
-a { color:#2563eb; font-weight:700; }
+  :root{
+    --gray-bg:#ffffff; --gray-border:#cbd5e1; --gray-text:#374151;
+    --red-bg:#fee2e2; --red-border:#dc2626; --red-text:#b91c1c;
+    --accent:#1d4ed8; --accent-dark:#1e3a8a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  body{
+    margin:0; font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background:#f1f5f9; color:#1e293b; user-select:none;
+  }
+  #app{ max-width:480px; margin:0 auto; min-height:100vh; background:#f8fafc; display:flex; flex-direction:column; }
+
+  header{
+    position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid #e2e8f0;
+    padding:14px 16px; display:flex; justify-content:space-between; align-items:center;
+  }
+  header .date{ font-size:17px; font-weight:700; color:#0f172a; }
+  header .date .sub{ font-size:13px; color:#64748b; font-weight:500; margin-top:2px; }
+  header .back{ font-size:13px; color:#64748b; text-decoration:none; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; }
+
+  main{ flex:1; padding:14px; padding-bottom:90px; }
+
+  .floor-block{ margin-bottom:20px; }
+  .floor-title{ font-size:15px; font-weight:800; color:#475569; margin:0 0 10px 4px; }
+
+  .room-grid{
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;
+  }
+  .room-card{
+    aspect-ratio:1/1; border-radius:12px; border:2px solid var(--gray-border);
+    background:var(--gray-bg); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:60px; min-width:44px; cursor:pointer; touch-action:pan-y;
+    transition:background .12s, border-color .12s;
+  }
+  .room-card.tappable{ cursor:pointer; }
+  .room-card .num{ font-size:14px; font-weight:800; color:#0f172a; }
+  .room-card .state{ font-size:12px; font-weight:700; color:var(--gray-text); margin-top:2px; }
+  .room-card.occupied{ background:var(--red-bg); border-color:var(--red-border); }
+  .room-card.occupied .num{ color:var(--red-text); }
+  .room-card.occupied .state{ color:var(--red-text); }
+  .room-card.readonly{ cursor:default; }
+
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
+    display:flex; background:#fff; border-top:1px solid #e2e8f0; z-index:20;
+  }
+  nav.tabbar button{
+    flex:1; border:none; background:none; padding:12px 4px 14px; font-size:13px; font-weight:700;
+    color:#94a3b8; min-height:60px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  nav.tabbar button.active{ color:var(--accent); }
+  nav.tabbar button .icon{ font-size:20px; }
+
+  .summary-bar{
+    background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:16px;
+    display:flex; justify-content:space-around; text-align:center;
+  }
+  .summary-bar .item .n{ font-size:22px; font-weight:800; color:#0f172a; }
+  .summary-bar .item.warn .n{ color:var(--red-text); }
+  .summary-bar .item .l{ font-size:12px; color:#64748b; margin-top:2px; font-weight:600;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:100;
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{ background:#fff; border-radius:16px; padding:24px; width:100%; max-width:340px; text-align:center; }
+  .modal-box h2{ font-size:17px; margin:0 0 16px; color:#0f172a; }
+  .modal-box .summary-bar{ margin-bottom:8px; }
+  .modal-btn-row{ display:flex; gap:10px; margin-top:18px; }
+  .modal-btn{ flex:1; border:none; border-radius:12px; min-height:52px; font-size:16px; font-weight:800; cursor:pointer; }
+  .modal-btn.cancel{ background:#f1f5f9; color:#475569; }
+  .modal-btn.cancel:active{ background:#e2e8f0; }
+  .modal-btn.confirm{ background:var(--accent-dark); color:#fff; }
+  .modal-btn.confirm:active{ background:#172554; }
+  .modal-btn.confirm[disabled]{ opacity:.6; }
+
+  .session-item{ background:#fff; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .session-head{ padding:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; min-height:44px; gap:10px; }
+  .session-head .t{ font-size:15px; font-weight:800; color:#0f172a; }
+  .session-head .s{ font-size:13px; color:#64748b; margin-top:3px; }
+  .session-head .right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .session-head .arrow{ font-size:14px; color:#94a3b8; transition:transform .15s; }
+  .session-head.open .arrow{ transform:rotate(180deg); }
+  .delete-btn{
+    background:#fef2f2; color:var(--red-text); border:1px solid #fecaca; border-radius:8px;
+    font-size:13px; font-weight:700; padding:8px 12px; min-height:44px; cursor:pointer;
+  }
+  .delete-btn:active{ background:#fee2e2; }
+  .session-body{ display:none; padding:0 16px 16px; }
+  .session-body.open{ display:block; }
+  .empty-msg{ text-align:center; color:#94a3b8; padding:60px 20px; font-size:14px; line-height:1.6; }
+
+  .toast{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; color:#fff;
+    padding:14px 22px; border-radius:12px; font-size:14px; font-weight:600; z-index:50; opacity:0; transition:opacity .2s;
+    max-width:300px; text-align:center; pointer-events:none;
+  }
+  .toast.show{ opacity:1; }
 </style>
 </head>
 <body>
-<div>
-  짐체크 앱이 이동되었습니다.<br>
-  자동으로 이동하지 않으면 <a href="https://script.google.com/macros/s/AKfycbyE7dzVtK6RIE3eUITU61CfqDeEt_5NH5utTxEyG8O4h1LfLuxy3W01LMJfdF_lxv2l/exec">여기를 눌러주세요</a>.
+<div id="app">
+  <header>
+    <div class="date">
+      <div id="todayDate">-</div>
+      <div class="sub" id="checkingLabel">불러오는 중...</div>
+    </div>
+    <a class="back" href="index.html">← 현황</a>
+  </header>
+
+  <main id="main"></main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="check"><span class="icon">🏠</span>객실체크</button>
+    <button class="tab-btn" data-tab="history"><span class="icon">📋</span>기록보기</button>
+    <button class="tab-btn" id="saveTabBtn"><span class="icon">💾</span>저장</button>
+  </nav>
 </div>
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box" id="saveModalContent"></div>
+</div>
+<div class="toast" id="toast"></div>
+
 <script>
-location.replace('https://script.google.com/macros/s/AKfycbyE7dzVtK6RIE3eUITU61CfqDeEt_5NH5utTxEyG8O4h1LfLuxy3W01LMJfdF_lxv2l/exec');
+const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
+
+const FLOORS = [
+  { name: '2층', rooms: Array.from({length:13}, (_,i)=>201+i) },
+  { name: '3층', rooms: Array.from({length:10}, (_,i)=>301+i) },
+  { name: '5층', rooms: Array.from({length:10}, (_,i)=>501+i) },
+];
+const ALL_ROOMS = FLOORS.flatMap(f=>f.rooms);
+
+let rooms = {};
+ALL_ROOMS.forEach(r => rooms[r] = false);
+let dirty = false;
+let sessions = [];
+let currentTab = 'check';
+let openSessionId = null;
+let dataReady = false;
+
+const mainEl = document.getElementById('main');
+const toastEl = document.getElementById('toast');
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), 1800);
+}
+
+function fmtDateHeader(d){
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+function fmtSessionLabel(d){
+  const days = ['일','월','화','수','목','금','토'];
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${d.getMonth()+1}월 ${d.getDate()}일(${days[d.getDay()]}) · ${hh}:${mm}`;
+}
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+document.getElementById('todayDate').textContent = fmtDateHeader(new Date());
+
+/* ── JSONP 유틸 (다른 앱과 동일한 방식) ─────────── */
+function fetchJsonp(url) {
+  return new Promise(function(resolve, reject) {
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    const script = document.createElement('script');
+    const timer = setTimeout(function() { cleanup(); reject(new Error('timeout')); }, 12000);
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    function cleanup() {
+      clearTimeout(timer); delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    script.onerror = function() { cleanup(); reject(new Error('network error')); };
+    script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
+async function loadSessions(){
+  try{
+    sessions = await fetchJsonp(API + '?action=luggage_sessions') || [];
+    const today = sessions.find(s => s.id === todayKey());
+    if(today){
+      ALL_ROOMS.forEach(r => rooms[r] = !!today.rooms[String(r)]);
+    }
+  }catch(e){
+    console.error(e);
+    sessions = [];
+    showToast('데이터를 불러오지 못했습니다');
+  }
+  dataReady = true;
+  updateCheckingLabel();
+  render();
+}
+
+function attachTapHandler(el, onTap){
+  let startX=0, startY=0, tracking=false;
+  const THRESHOLD = 10;
+  el.addEventListener('pointerdown', (e)=>{ startX=e.clientX; startY=e.clientY; tracking=true; });
+  el.addEventListener('pointerup', (e)=>{
+    if(!tracking) return;
+    tracking = false;
+    const dist = Math.sqrt((e.clientX-startX)**2 + (e.clientY-startY)**2);
+    if(dist < THRESHOLD) onTap();
+  });
+  el.addEventListener('pointercancel', ()=>{ tracking = false; });
+}
+
+function renderCheckScreen(){
+  let html = '';
+  FLOORS.forEach(f=>{
+    html += `<div class="floor-block"><div class="floor-title">${f.name}</div><div class="room-grid">`;
+    f.rooms.forEach(r=>{
+      const occ = rooms[r];
+      html += `<div class="room-card tappable ${occ?'occupied':''}" data-room="${r}">
+        <div class="num">${r}</div><div class="state">${occ?'짐있음':'공실'}</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  mainEl.innerHTML = html;
+  mainEl.querySelectorAll('.room-card').forEach(card=>{
+    attachTapHandler(card, ()=>{
+      const r = card.dataset.room;
+      rooms[r] = !rooms[r];
+      dirty = true;
+      card.classList.toggle('occupied', rooms[r]);
+      card.querySelector('.state').textContent = rooms[r] ? '짐있음' : '공실';
+      updateCheckingLabel();
+    });
+  });
+}
+
+function renderHistoryScreen(){
+  if(sessions.length === 0){
+    mainEl.innerHTML = `<div class="empty-msg">아직 저장된 기록이 없습니다.<br>객실체크 후 '저장'으로 기록을 저장해보세요.</div>`;
+    return;
+  }
+  const sorted = [...sessions].sort((a,b)=> b.ts - a.ts);
+  let html = '';
+  sorted.forEach(s=>{
+    const total = ALL_ROOMS.length;
+    const occCount = ALL_ROOMS.filter(r=> s.rooms[r]).length;
+    const isOpen = openSessionId === s.id;
+    html += `<div class="session-item">
+      <div class="session-head ${isOpen?'open':''}" data-id="${s.id}">
+        <div><div class="t">${fmtSessionLabel(new Date(s.ts))}</div>
+        <div class="s">전체 ${total}실 · 짐있음 ${occCount}실</div></div>
+        <div class="right">
+          <button class="delete-btn" data-id="${s.id}" data-delete="1">삭제</button>
+          <div class="arrow">▼</div>
+        </div>
+      </div>
+      <div class="session-body ${isOpen?'open':''}" id="body-${s.id}"></div>
+    </div>`;
+  });
+  mainEl.innerHTML = html;
+  sorted.forEach(s=>{
+    if(openSessionId === s.id){
+      document.getElementById(`body-${s.id}`).innerHTML = renderReadonlyRooms(s.rooms);
+    }
+  });
+  mainEl.querySelectorAll('.session-head').forEach(head=>{
+    head.addEventListener('click', ()=>{
+      const id = head.dataset.id;
+      openSessionId = (openSessionId === id) ? null : id;
+      renderHistoryScreen();
+    });
+  });
+  mainEl.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      handleDeleteSession(btn.dataset.id);
+    });
+  });
+}
+
+async function handleDeleteSession(dayKey){
+  openConfirmModal('이 기록을 삭제하시겠습니까?', async ()=>{
+    try{
+      await fetch(API, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=luggage_delete&dayKey=' + encodeURIComponent(dayKey)
+      });
+      sessions = sessions.filter(s=> s.id !== dayKey);
+      if(openSessionId === dayKey) openSessionId = null;
+      renderHistoryScreen();
+      showToast('기록이 삭제되었습니다');
+    }catch(e){
+      console.error(e);
+      showToast('삭제에 실패했습니다');
+    }
+  });
+}
+
+function openConfirmModal(message, onYes){
+  document.getElementById('saveModalContent').innerHTML = `
+    <h2>${message}</h2>
+    <div class="modal-btn-row">
+      <button class="modal-btn cancel" id="confirmNoBtn">아니오</button>
+      <button class="modal-btn confirm" id="confirmYesBtn">예</button>
+    </div>
+  `;
+  document.getElementById('confirmNoBtn').addEventListener('click', closeSaveModal);
+  document.getElementById('confirmYesBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('confirmYesBtn');
+    btn.disabled = true;
+    btn.textContent = '삭제 중...';
+    await onYes();
+    closeSaveModal();
+  });
+  document.getElementById('saveModal').classList.add('open');
+}
+
+function renderReadonlyRooms(snapshotRooms){
+  let html = '';
+  FLOORS.forEach(f=>{
+    html += `<div class="floor-block" style="margin-top:14px;"><div class="floor-title">${f.name}</div><div class="room-grid">`;
+    f.rooms.forEach(r=>{
+      const occ = !!snapshotRooms[r];
+      html += `<div class="room-card readonly ${occ?'occupied':''}">
+        <div class="num">${r}</div><div class="state">${occ?'짐있음':'공실'}</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  return html;
+}
+
+function renderSaveModalContent(){
+  const total = ALL_ROOMS.length;
+  const occCount = ALL_ROOMS.filter(r=> rooms[r]).length;
+  const emptyCount = total - occCount;
+  document.getElementById('saveModalContent').innerHTML = `
+    <h2>현재 시점 기록을 저장할까요?</h2>
+    <div class="summary-bar">
+      <div class="item"><div class="n">${total}</div><div class="l">전체 객실</div></div>
+      <div class="item"><div class="n">${emptyCount}</div><div class="l">공실</div></div>
+      <div class="item warn"><div class="n">${occCount}</div><div class="l">짐있음</div></div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="modal-btn cancel" id="modalCancelBtn">취소</button>
+      <button class="modal-btn confirm" id="modalConfirmBtn">저장</button>
+    </div>
+  `;
+  document.getElementById('modalCancelBtn').addEventListener('click', closeSaveModal);
+  document.getElementById('modalConfirmBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('modalConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    await doSave();
+    closeSaveModal();
+  });
+}
+
+function openSaveModal(){
+  renderSaveModalContent();
+  document.getElementById('saveModal').classList.add('open');
+}
+function closeSaveModal(){
+  document.getElementById('saveModal').classList.remove('open');
+}
+
+async function doSave(){
+  const results = ALL_ROOMS.map(r => r + '=' + (rooms[r] ? 'yes' : 'no')).join(',');
+  try{
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=luggage_check&date=' + encodeURIComponent(todayKey()) + '&results=' + encodeURIComponent(results)
+    });
+    dirty = false;
+    updateCheckingLabel();
+    showToast('구글 시트에 저장되었습니다');
+    setTimeout(loadSessions, 1500); // 서버 반영 후 기록 목록도 갱신
+  }catch(e){
+    console.error(e);
+    showToast('저장에 실패했습니다. 다시 시도해주세요');
+  }
+}
+
+function updateCheckingLabel(){
+  document.getElementById('checkingLabel').textContent = dirty ? '체크 중 (저장 안 됨)' : '체크 중';
+}
+
+function render(){
+  if(!dataReady){
+    mainEl.innerHTML = `<div class="empty-msg">불러오는 중...</div>`;
+    return;
+  }
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(b=> b.classList.toggle('active', b.dataset.tab === currentTab));
+  if(currentTab === 'check') renderCheckScreen();
+  else if(currentTab === 'history') renderHistoryScreen();
+}
+
+document.querySelectorAll('.tab-btn[data-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentTab = btn.dataset.tab;
+    render(); // 캐시된 데이터로 즉시 화면 전환
+    if(currentTab === 'history'){
+      // 최신 데이터는 백그라운드에서 조회 후 조용히 갱신
+      fetchJsonp(API + '?action=luggage_sessions').then(res=>{
+        sessions = res || [];
+        if(currentTab === 'history') render();
+      }).catch(()=>{ /* 백그라운드 갱신 실패는 무시, 캐시 유지 */ });
+    }
+  });
+});
+
+document.getElementById('saveTabBtn').addEventListener('click', openSaveModal);
+
+loadSessions();
 </script>
 </body>
 </html>
