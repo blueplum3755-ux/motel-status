@@ -16,7 +16,7 @@
     margin:0; font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
     background:#f1f5f9; color:#1e293b; user-select:none;
   }
-  #app{ max-width:480px; margin:0 auto; min-height:100vh; background:#f8fafc; display:flex; flex-direction:column; }
+  #app{ max-width:480px; margin:0 auto; min-height:100vh; min-height:100dvh; background:#f8fafc; display:flex; flex-direction:column; }
 
   header{
     position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid #e2e8f0;
@@ -60,6 +60,8 @@
   nav.tabbar{
     position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
     display:flex; background:#fff; border-top:1px solid #e2e8f0; z-index:20;
+    transform:translateZ(0); -webkit-transform:translateZ(0);
+    padding-bottom:env(safe-area-inset-bottom);
   }
   nav.tabbar button{
     flex:1; border:none; background:none; padding:12px 4px 14px; font-size:13px; font-weight:700;
@@ -472,6 +474,15 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach(btn=>{
 });
 
 document.getElementById('saveTabBtn').addEventListener('click', openSaveModal);
+
+// 접속 직후 하단 고정 탭바가 눌리지 않는 iOS Safari 이슈 방지용:
+// 뷰포트 주소창 축소/레이아웃 재계산을 강제로 한 번 유도합니다(스크롤 살짝 조정과 동일 효과).
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    window.scrollTo(0, 1);
+    window.scrollTo(0, 0);
+  }, 100);
+});
 
 loadSessions();
 </script>
