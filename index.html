@@ -347,6 +347,16 @@ function switchTab(tab) {
   if (tab === 'reservation') loadResLog();
 }
 
+// ── 시간 포맷 ──────────────────────────────
+function fmtTimeHM(raw) {
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return hh + ':' + mm;
+}
+
 // ── 분류 ───────────────────────────────────
 function classify(r) {
   if (r.reentryHold)                              return 'reentryhold'; // 재입실확인필요 (판매보류)
@@ -473,6 +483,7 @@ function renderCleaning() {
   document.getElementById('cleanDoneList').innerHTML = done.length
     ? done.map(r => `<div class="clean-card done">
         <div class="clean-room">${r.room}호</div>
+        <div class="clean-info">${fmtTimeHM(r.rawCleaningEndTime)} 완료</div>
         <span class="clean-badge badge-done">완료</span>
       </div>`).join('')
     : '<div class="empty-state" style="grid-column:1/-1">청소 완료 내역 없음</div>';
