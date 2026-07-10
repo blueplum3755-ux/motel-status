@@ -862,6 +862,10 @@ function renderModalTotal(){
 }
 
 // ── 저장/삭제 ─────────────────────────────────────────
+// 수정(edit) 시 "기존 삭제 + 신규 추가"를 별도의 두 요청으로 나눠 보내면, 응답 확인 없는
+// fire-and-forget(no-cors) 특성상 짧은 시간에 연달아 수정할 때 삭제만 반영되고 추가가
+// 유실되는 경합이 생길 수 있었음(2026-07-01 기록 다수 유실 사고). 이제는 기존 행 번호를
+// postAdd 요청 하나에 함께 실어 보내 서버가 같은 실행 안에서 한 번에 처리하도록 변경.
 async function saveModal() {
   var clientName=modal.client==='__custom__'
     ?(document.getElementById('customClientInput').value.trim())
@@ -870,13 +874,13 @@ async function saveModal() {
   if (!modal.price){ showToast('요금을 입력해주세요'); return; }
   var extra=Math.max(0,modal.persons-2)*EXTRA_RATE;
   var total=modal.price+extra;
+  var oldRowId = modal.existingId;
   if (modal.existingId) {
     records=records.filter(function(r){ return r.id!==modal.existingId; });
-    await postDelete(modal.existingId);
   }
   records.push({ id:Date.now(), date:checkDate, client:clientName, room:modal.roomNum, persons:modal.persons, price:modal.price, extra:extra, total:total });
   closeModal(); updateHeaderStats(); renderRoomGrid();
-  await postAdd(checkDate, clientName, modal.roomNum, modal.price, modal.persons);
+  await postAdd(checkDate, clientName, modal.roomNum, modal.price, modal.persons, oldRowId);
 }
 
 async function deleteFromModal() {
@@ -887,13 +891,14 @@ async function deleteFromModal() {
   await postDelete(modal.existingId);
 }
 
-async function postAdd(date,client,room,price,persons) {
+async function postAdd(date,client,room,price,persons,oldRowId) {
   var extra=Math.max(0,persons-2)*EXTRA_RATE, total=price+extra;
   try {
     await fetch(API,{ method:'POST', mode:'no-cors',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:'action=checkin_add'+'&date='+encodeURIComponent(date)+'&client='+encodeURIComponent(client)
-        +'&room='+encodeURIComponent(room)+'&price='+price+'&persons='+persons+'&extra='+extra+'&total='+total });
+        +'&room='+encodeURIComponent(room)+'&price='+price+'&persons='+persons+'&extra='+extra+'&total='+total
+        +(oldRowId ? '&oldRowId='+oldRowId : '') });
     setTimeout(loadData,1500);
   } catch(e){ showToast('저장 오류'); }
 }
