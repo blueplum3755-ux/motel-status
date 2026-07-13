@@ -220,8 +220,9 @@ body { display: flex; flex-direction: column; }
 <!-- 예약 추가 모달 -->
 <div class="modal-overlay" id="reserveModal" onclick="closeOutside(event,'reserveModal')">
   <div class="modal">
-    <div class="modal-title">예약 추가</div>
+    <div class="modal-title">예약 추가 <span style="font-size:11px;font-weight:400;color:var(--text-sub)">(여러 객실 동시 선택 가능)</span></div>
     <div class="modal-room-list" id="reserveRoomList"></div>
+    <div id="reserveSelectedLabel" style="font-size:12px;color:var(--text-sub);margin:4px 0 8px;">선택된 객실 없음</div>
     <input class="modal-input" id="reservePhone" type="tel" inputmode="numeric" placeholder="전화번호 (필수)" style="margin-bottom:8px">
     <input class="modal-input" id="reserveDate" type="date" style="margin-bottom:8px">
     <input class="modal-input" id="reserveMemo" type="text" placeholder="메모 (선택)">
@@ -285,7 +286,7 @@ const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFd
 let allRooms = [];
 let currentStatusTab = 'all';
 let selectedKind = '숙박';
-let selectedReserveRoom = null;
+let selectedReserveRooms = new Set();
 let selectedCancelRoom = null;
 let refreshTimer = null;
 
@@ -545,9 +546,9 @@ function renderResLog(list) {
   }).join('');
 }
 
-// ── 예약 추가 ──────────────────────────────
+// ── 예약 추가 (여러 객실 동시 선택 가능) ──────
 function openReserveModal() {
-  selectedReserveRoom = null;
+  selectedReserveRooms = new Set();
   document.getElementById('reserveMemo').value = '';
   document.getElementById('reserveImportant').checked = false;
   document.getElementById('reserveDate').value = new Date().toISOString().slice(0, 10);
@@ -556,34 +557,52 @@ function openReserveModal() {
   document.getElementById('reserveRoomList').innerHTML = rooms.length
     ? rooms.map(r => `<div class="modal-room-btn" data-room="${r.room}" onclick="pickReserveRoom(this,'${r.room}')">${r.room}</div>`).join('')
     : '<div style="color:var(--text-sub);font-size:13px;grid-column:1/-1;padding:8px">공실 없음</div>';
+  renderReserveSelectedLabel();
 
   openModal('reserveModal');
 }
 
 function pickReserveRoom(el, room) {
-  selectedReserveRoom = room;
-  document.querySelectorAll('#reserveRoomList .modal-room-btn').forEach(b => b.classList.toggle('selected', b.dataset.room === room));
+  if (selectedReserveRooms.has(room)) {
+    selectedReserveRooms.delete(room);
+  } else {
+    selectedReserveRooms.add(room);
+  }
+  el.classList.toggle('selected', selectedReserveRooms.has(room));
+  renderReserveSelectedLabel();
+}
+
+function renderReserveSelectedLabel() {
+  const list = Array.from(selectedReserveRooms).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  document.getElementById('reserveSelectedLabel').textContent = list.length
+    ? `선택된 객실 (${list.length}개): ${list.join(', ')}호`
+    : '선택된 객실 없음';
 }
 
 async function submitReservation() {
-  if (!selectedReserveRoom) { showToast('객실을 선택해주세요'); return; }
+  const rooms = Array.from(selectedReserveRooms).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  if (!rooms.length) { showToast('객실을 선택해주세요'); return; }
   const phone = document.getElementById('reservePhone').value.trim();
   if (!phone) { showToast('전화번호를 입력해주세요'); return; }
   const memo = document.getElementById('reserveMemo').value.trim();
   const resDate = document.getElementById('reserveDate').value || '';
   const important = document.getElementById('reserveImportant').checked ? '1' : '0';
+  const roomParam = rooms.join(',');
   closeModal('reserveModal');
 
-  const r = allRooms.find(r => r.room === selectedReserveRoom);
-  if (r) { r.isReserved = true; renderAll(); }
+  rooms.forEach(roomNum => {
+    const r = allRooms.find(r => r.room === roomNum);
+    if (r) r.isReserved = true;
+  });
+  renderAll();
 
   try {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=reserve_request&room=${encodeURIComponent(selectedReserveRoom)}&kind=%EC%98%88%EC%95%BD&phone=${encodeURIComponent(phone)}&memo=${encodeURIComponent(memo)}&resDate=${encodeURIComponent(resDate)}&important=${important}`
+      body: `action=reserve_request&room=${encodeURIComponent(roomParam)}&kind=%EC%98%88%EC%95%BD&phone=${encodeURIComponent(phone)}&memo=${encodeURIComponent(memo)}&resDate=${encodeURIComponent(resDate)}&important=${important}`
     });
-    showToast(selectedReserveRoom + '호 예약 요청 완료' + (important === '1' ? ' · 캘린더 등록됨' : ''));
+    showToast(rooms.join(', ') + '호 예약 요청 완료' + (important === '1' ? ' · 캘린더 등록됨' : ''));
     setTimeout(loadResLog, 2000);
   } catch (e) {
     showToast('전송 오류 — 잠시 후 확인해주세요');
