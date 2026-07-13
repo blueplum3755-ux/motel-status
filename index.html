@@ -170,7 +170,6 @@ body { display: flex; flex-direction: column; }
 <div class="tab-bar">
   <div class="tab-btn active" data-tab="status" onclick="switchTab('status')">현황</div>
   <div class="tab-btn" data-tab="cleaning" onclick="switchTab('cleaning')">청소</div>
-  <div class="tab-btn" data-tab="reservation" onclick="switchTab('reservation')">예약하기</div>
   <a class="tab-btn tab-link" href="checkin.html">📋 입실체크</a>
   <a class="tab-btn tab-link" href="luggage.html">🧳 짐체크</a>
 </div>
@@ -186,6 +185,19 @@ body { display: flex; flex-direction: column; }
       <div class="status-tab" data-status="vacant" onclick="selectStatusTab('vacant')">공실</div>
       <div class="status-tab" data-status="reserved" onclick="selectStatusTab('reserved')">예약</div>
     </div>
+
+    <!-- 예약 하위탭 전용 관리 영역 (기존 "예약하기" 탭 흡수) -->
+    <div class="scroll-area" id="reservePanel" style="display:none; flex:0 0 auto; max-height:45%;">
+      <div class="reserve-actions">
+        <button class="btn-reserve primary" onclick="openReserveModal()">＋ 예약 추가</button>
+        <button class="btn-reserve danger"  onclick="openCancelModal()">예약 취소</button>
+      </div>
+      <div class="section-title">처리 내역 <span id="resLogRefresh" style="font-size:10px;color:var(--text-sub);cursor:pointer;margin-left:8px;" onclick="loadResLog()">↻ 새로고침</span></div>
+      <div id="reservationLog" style="margin-bottom:12px;"></div>
+      <div class="section-title">현재 예약 (RMS 기준)</div>
+      <div class="reservation-list" id="reservationList"></div>
+    </div>
+
     <div class="floor-content">
       <div class="room-grid" id="roomGrid">
         <div class="loading" style="grid-column:1/-1">불러오는 중...</div>
@@ -200,20 +212,6 @@ body { display: flex; flex-direction: column; }
       <div class="clean-grid" id="cleanNeedList"></div>
       <div class="section-title">청소 완료</div>
       <div class="clean-grid" id="cleanDoneList"></div>
-    </div>
-  </div>
-
-  <!-- 예약 탭 -->
-  <div class="tab-panel" id="tab-reservation">
-    <div class="reserve-actions">
-      <button class="btn-reserve primary" onclick="openReserveModal()">＋ 예약 추가</button>
-      <button class="btn-reserve danger"  onclick="openCancelModal()">예약 취소</button>
-    </div>
-    <div class="scroll-area">
-      <div class="section-title">처리 내역 <span id="resLogRefresh" style="font-size:10px;color:var(--text-sub);cursor:pointer;margin-left:8px;" onclick="loadResLog()">↻ 새로고침</span></div>
-      <div id="reservationLog" style="margin-bottom:12px;"></div>
-      <div class="section-title">현재 예약 (RMS 기준)</div>
-      <div class="reservation-list" id="reservationList"></div>
     </div>
   </div>
 
@@ -344,7 +342,6 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'reservation') loadResLog();
 }
 
 // ── 시간 포맷 ──────────────────────────────
@@ -415,7 +412,14 @@ function renderStatusTabs() {
   );
 }
 
-function selectStatusTab(s) { currentStatusTab = s; renderStatusTabs(); renderGrid(); }
+function selectStatusTab(s) {
+  currentStatusTab = s;
+  renderStatusTabs();
+  renderGrid();
+  const panel = document.getElementById('reservePanel');
+  if (panel) panel.style.display = (s === 'reserved') ? '' : 'none';
+  if (s === 'reserved') loadResLog();
+}
 
 function getRoomsForTab(tab) {
   if (tab === 'all')      return allRooms;
