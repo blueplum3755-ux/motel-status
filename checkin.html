@@ -232,15 +232,17 @@ body { display: flex; flex-direction: column; }
 .lt-pay-badge.partial { background: #2d1a00; color: #fbbf24; }
 .lt-pay-badge.pending { background: #1f1108; color: #C1704F; }
 
-/* 계약 목록 아이템 (업체별 가나다순, 2열 그리드) */
-#ltContractList { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-#ltContractList .empty-state { grid-column: 1 / -1; }
-.lt-list-item { background: #1e2132; border: 1px solid #C4B898; border-radius: 12px; padding: 14px; cursor: pointer; }
-.lt-list-item:active { opacity: 0.8; }
-.lt-group-header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; padding: 10px 4px 4px; border-bottom: 1px solid #3a3e58; margin-top: 6px; }
-.lt-group-header:first-child { margin-top: 0; }
-.lt-group-name { font-size: 14px; font-weight: 800; color: #fbbf24; }
-.lt-group-meta { font-size: 11px; color: #a08050; }
+/* 계약 목록 (업체별 가나다순 표) */
+.lt-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.lt-table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 12.5px; }
+table.lt-table th { text-align: left; padding: 8px 10px; font-size: 11px; color: #6b7199; font-weight: 700; border-bottom: 1px solid #3a3e58; white-space: nowrap; position: sticky; top: 0; background: #14162a; }
+table.lt-table td { padding: 9px 10px; border-bottom: 1px solid #262a42; white-space: nowrap; color: #d7dae8; }
+table.lt-table tr.lt-row { cursor: pointer; }
+table.lt-table tr.lt-row:active { opacity: 0.75; }
+table.lt-table tr.lt-row-expired td { opacity: 0.5; }
+.lt-tag { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 700; }
+.lt-chk { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #4a4e68; color: #fff; font-size: 11px; font-weight: 800; }
+.lt-chk-on { background: #2f6fed; border-color: #2f6fed; }
 
 /* 신규 계약 버튼 */
 .lt-new-btn { flex-shrink: 0; margin: 0 14px 14px; padding: 14px; background: #D5EFDC; border: 1.5px solid #6B8F71; border-radius: 12px; color: #a5b4fc; font-size: 15px; font-weight: 800; cursor: pointer; text-align: center; }
@@ -1263,49 +1265,65 @@ function buildLtRoomCard(room, contract) {
     +'</div>';
 }
 
-// ── 계약 목록 ─────────────────────────────────────────
+// ── 계약 목록 (업체별 표) ─────────────────────────────
+function ltFmtDateKr(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  return p[0] + '년 ' + parseInt(p[1], 10) + '월 ' + parseInt(p[2], 10) + '일';
+}
+var LT_TAG_PALETTE = [
+  { bg: '#173a2a', fg: '#4ade80' },
+  { bg: '#16283f', fg: '#60a5fa' },
+  { bg: '#2b1d40', fg: '#c084fc' },
+  { bg: '#3a2510', fg: '#fb923c' },
+  { bg: '#3a1530', fg: '#f472b6' },
+  { bg: '#2a2a2a', fg: '#c4c4c4' },
+  { bg: '#0f3535', fg: '#5eead4' },
+  { bg: '#3a2f0a', fg: '#fbbf24' }
+];
+function ltClientTagColor(name) {
+  var hash = 0;
+  for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return LT_TAG_PALETTE[hash % LT_TAG_PALETTE.length];
+}
+function ltPayTagColor(method) {
+  method = method || '';
+  if (method.indexOf('세금계산서') !== -1) return { bg: '#3a1530', fg: '#f0a8c8' };
+  if (method.indexOf('입금대기') !== -1)   return { bg: '#3a2510', fg: '#fb923c' };
+  if (method.indexOf('카드') !== -1)       return { bg: '#16283f', fg: '#60a5fa' };
+  if (method.indexOf('현금') !== -1)       return { bg: '#2a2a2a', fg: '#c4c4c4' };
+  return { bg: '#2a2a2a', fg: '#c4c4c4' };
+}
+function ltChk(on) { return '<span class="lt-chk' + (on ? ' lt-chk-on' : '') + '">' + (on ? '✓' : '') + '</span>'; }
+
 function renderLtList() {
   var contracts = getLtContracts().slice();
   if (!contracts.length) {
     document.getElementById('ltContractList').innerHTML = '<div class="empty-state" style="color:#a08050">계약 내역 없음</div>';
     return;
   }
-  var groups = {};
-  contracts.forEach(function(c) {
-    var key = c.client || '(미지정)';
-    (groups[key] = groups[key] || []).push(c);
+  contracts.sort(function(a, b) {
+    return (a.client || '').localeCompare(b.client || '', 'ko') || (parseInt(a.room, 10) - parseInt(b.room, 10));
   });
-  var clientNames = Object.keys(groups).sort(function(a, b) { return a.localeCompare(b, 'ko'); });
-
-  document.getElementById('ltContractList').innerHTML = clientNames.map(function(client) {
-    var list = groups[client].sort(function(a, b) { return parseInt(a.room, 10) - parseInt(b.room, 10); });
-    var activeCnt = list.filter(isLtActive).length;
-    var totalPrice = list.reduce(function(s, c) { return s + (c.contractPrice || 0); }, 0);
-    var header = '<div class="lt-group-header">'
-      +'<span class="lt-group-name">'+client+'</span>'
-      +'<span class="lt-group-meta">'+list.length+'건 · 진행중 '+activeCnt+' · 합계 '+fmtLt(totalPrice)+'원</span>'
-      +'</div>';
-    var cards = list.map(function(c) {
-      var ps = ltPayStatus(c);
-      var statusColor = isLtActive(c) ? '#4ade80' : (isLtExpired(c) ? '#6b5030' : '#fbbf24');
-      var statusText  = isLtActive(c) ? '진행중' : (isLtExpired(c) ? '만기' : '예정');
-      var payColor = ps==='done' ? '#4ade80' : (ps==='partial' ? '#fbbf24' : '#f87171');
-      var payText  = ps==='done' ? '수납완료' : (ps==='partial' ? '처리중' : '미수납');
-      return '<div class="lt-list-item" onclick="openLtModal(\''+c.id+'\',null)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-        +'<span style="font-size:15px;font-weight:800;color:#f0e6d0">'+c.room+'호</span>'
-        +'<span style="font-size:11px;color:'+statusColor+';font-weight:700">'+statusText+'</span>'
-        +'</div>'
-        +'<div style="font-size:13px;font-weight:700;color:#d97706;margin-bottom:2px">'+c.client+'</div>'
-        +'<div style="font-size:11px;color:#a08050">'+c.startDate+' ~ '+c.endDate+'</div>'
-        +'<div style="display:flex;justify-content:space-between;margin-top:6px">'
-        +'<span style="font-size:14px;font-weight:700;color:#fbbf24">'+fmtLt(c.contractPrice)+'원</span>'
-        +'<span style="font-size:12px;color:'+payColor+';font-weight:700">'+payText+'</span>'
-        +'</div>'
-        +'</div>';
-    }).join('');
-    return header + cards;
+  var rows = contracts.map(function(c) {
+    var clientTag = ltClientTagColor(c.client || '(미지정)');
+    var payTag = ltPayTagColor(c.payMethod);
+    var expired = isLtExpired(c);
+    return '<tr class="lt-row' + (expired ? ' lt-row-expired' : '') + '" onclick="openLtModal(\'' + c.id + '\',null)">'
+      + '<td><span class="lt-tag" style="background:' + clientTag.bg + ';color:' + clientTag.fg + '">' + (c.client || '(미지정)') + '</span></td>'
+      + '<td>' + c.room + '호</td>'
+      + '<td>' + ltFmtDateKr(c.startDate) + '</td>'
+      + '<td>' + ltFmtDateKr(c.endDate) + '</td>'
+      + '<td>₩' + fmtLt(c.contractPrice) + '</td>'
+      + '<td><span class="lt-tag" style="background:' + payTag.bg + ';color:' + payTag.fg + '">' + (c.payMethod || '미지정') + '</span></td>'
+      + '<td>' + ltChk(!!c.taxInvoiceDone) + '</td>'
+      + '<td>' + ltChk(!!c.paymentDone) + '</td>'
+      + '</tr>';
   }).join('');
+  document.getElementById('ltContractList').innerHTML =
+    '<div class="lt-table-wrap"><table class="lt-table">'
+    + '<thead><tr><th>업체명</th><th>객실</th><th>시작일</th><th>마감일</th><th>객실금액</th><th>결제방식</th><th>세금계산서</th><th>입금확인</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table></div>';
 }
 
 // ── 모달 열기/닫기 ────────────────────────────────────
