@@ -583,6 +583,14 @@ async function init() {
   loadConfig();
   // 기록 로드
   loadData();
+  // 카카오워크 알림의 "자세히보기" 딥링크 (?tab=longterm&sub=list)
+  try {
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('tab') === 'longterm') {
+      switchGroupTab('longterm');
+      if (qs.get('sub') === 'list') switchLtTab('list');
+    }
+  } catch (e) {}
 }
 
 // ── 고객 설정 로드/저장 ───────────────────────────────
