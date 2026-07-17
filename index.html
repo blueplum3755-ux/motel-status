@@ -758,10 +758,14 @@ async function resolveReentry(result) {
 }
 
 // ── 예약 취소 (날짜 무관 전체 예약 대상, 여러 객실 동시 취소 가능) ──────────────
-let selectedCancelRooms = new Set();
+// 같은 방에 날짜가 다른 예약이 동시에 여러 건 있을 수 있어(2026-07-17~), 방 번호만으로는
+// 어떤 예약을 취소할지 구분이 안 됨 — "방번호|입실예정일" 조합을 선택 키로 사용합니다.
+let selectedCancelKeys = new Set();
+
+function cancelKeyOf(r) { return r.room + '|' + (r.checkinDate || ''); }
 
 async function openCancelModal() {
-  selectedCancelRooms = new Set();
+  selectedCancelKeys = new Set();
   document.getElementById('cancelRoomList').innerHTML = '<div style="color:var(--text-sub);font-size:13px;grid-column:1/-1;padding:8px">불러오는 중...</div>';
   renderCancelSelectedLabel();
   openModal('cancelModal');
@@ -772,30 +776,37 @@ async function openCancelModal() {
 }
 
 function renderCancelRoomList() {
-  const rooms = reservationListCache || [];
-  document.getElementById('cancelRoomList').innerHTML = rooms.length
-    ? rooms.map(r => `<div class="modal-room-btn${selectedCancelRooms.has(r.room) ? ' selected' : ''}" data-room="${r.room}" onclick="pickCancelRoom(this,'${r.room}')">${r.room}<span style="display:block;font-size:10px;font-weight:400;color:var(--text-sub)">${r.checkinDate || ''}</span></div>`).join('')
+  const rows = reservationListCache || [];
+  document.getElementById('cancelRoomList').innerHTML = rows.length
+    ? rows.map(r => {
+        const key = cancelKeyOf(r);
+        const sub = [r.checkinDate, r.client].filter(Boolean).join(' · ');
+        return `<div class="modal-room-btn${selectedCancelKeys.has(key) ? ' selected' : ''}" data-key="${key}" onclick="pickCancelRoom(this,'${key}')">${r.room}<span style="display:block;font-size:10px;font-weight:400;color:var(--text-sub)">${sub || ''}</span></div>`;
+      }).join('')
     : '<div style="color:var(--text-sub);font-size:13px;grid-column:1/-1;padding:8px">예약 없음</div>';
 }
 
-function pickCancelRoom(el, room) {
-  if (selectedCancelRooms.has(room)) selectedCancelRooms.delete(room);
-  else selectedCancelRooms.add(room);
-  el.classList.toggle('selected', selectedCancelRooms.has(room));
+function pickCancelRoom(el, key) {
+  if (selectedCancelKeys.has(key)) selectedCancelKeys.delete(key);
+  else selectedCancelKeys.add(key);
+  el.classList.toggle('selected', selectedCancelKeys.has(key));
   renderCancelSelectedLabel();
 }
 
 function renderCancelSelectedLabel() {
-  const list = Array.from(selectedCancelRooms).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-  document.getElementById('cancelSelectedLabel').textContent = list.length
-    ? `선택된 객실 (${list.length}개): ${list.join(', ')}호`
+  const rows = (reservationListCache || []).filter(r => selectedCancelKeys.has(cancelKeyOf(r)));
+  document.getElementById('cancelSelectedLabel').textContent = rows.length
+    ? `선택된 예약 (${rows.length}건): ` + rows.map(r => r.room + '호(' + (r.checkinDate || '-') + ')').join(', ')
     : '선택된 객실 없음';
 }
 
 async function submitCancel() {
-  const rooms = Array.from(selectedCancelRooms).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-  if (!rooms.length) { showToast('취소할 객실을 선택해주세요'); return; }
+  const rows = (reservationListCache || []).filter(r => selectedCancelKeys.has(cancelKeyOf(r)));
+  if (!rows.length) { showToast('취소할 객실을 선택해주세요'); return; }
+  const rooms = rows.map(r => r.room);
+  const dates = rows.map(r => (r.checkinDate || '').slice(0, 10)); // yyyy-MM-dd만 사용 (시분은 매칭에 불필요)
   const roomParam = rooms.join(',');
+  const dateParam = dates.join(',');
   closeModal('cancelModal');
 
   rooms.forEach(roomNum => {
@@ -808,7 +819,7 @@ async function submitCancel() {
     await fetch(API, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `action=reserve_request&room=${encodeURIComponent(roomParam)}&kind=%EC%B7%A8%EC%86%8C`
+      body: `action=reserve_request&room=${encodeURIComponent(roomParam)}&kind=%EC%B7%A8%EC%86%8C&dates=${encodeURIComponent(dateParam)}`
     });
     showToast(rooms.join(', ') + '호 예약 취소 완료');
     setTimeout(loadReservationList, 1500);
