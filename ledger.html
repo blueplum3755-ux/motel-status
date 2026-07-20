@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>숙박일지</title>
+<style>
+:root {
+  --bg: #0f1117; --surface: #1a1d27; --surface2: #222536; --surface3: #2a2e42;
+  --border: #2d3148; --text: #e8eaf0; --text-sub: #7b80a0; --accent: #6c7aff;
+  --green: #4ade80; --orange: #f0a020; --red: #e05d5d; --blue: #5aa9e6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; color: var(--text); }
+body { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── 헤더 ── */
+.header { flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.header-left { display: flex; align-items: center; gap: 14px; }
+.back-link { font-size: 13px; color: var(--text-sub); text-decoration: none; }
+.header-title { font-size: 20px; font-weight: 800; }
+.date-nav { display: flex; align-items: center; gap: 8px; }
+.date-nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 14px; font-size: 14px; cursor: pointer; }
+.date-nav-btn:hover { border-color: var(--accent); }
+.date-display { font-size: 16px; font-weight: 700; min-width: 150px; text-align: center; cursor: pointer; }
+.date-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 7px 10px; font-size: 14px; }
+.yesterday-btn { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.progress-badge { font-size: 13px; color: var(--text-sub); }
+.progress-badge b { color: var(--green); }
+
+/* ── 본문 ── */
+.content { flex: 1; overflow-y: auto; padding: 20px 24px 100px; }
+.floor-section { margin-bottom: 22px; }
+.floor-label { font-size: 12px; font-weight: 800; color: var(--text-sub); letter-spacing: 0.08em; margin-bottom: 10px; text-transform: uppercase; }
+.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+
+.room-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; cursor: pointer; transition: border-color 0.15s; min-height: 100px; display: flex; flex-direction: column; gap: 6px; }
+.room-card:hover { border-color: var(--accent); }
+.room-card.complete { border-color: #2f5d3a; background: #16241a; }
+.room-card.incomplete-required { border-color: #5d3a2f; }
+.room-top { display: flex; align-items: center; justify-content: space-between; }
+.room-num { font-size: 16px; font-weight: 800; }
+.room-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.badge-long { background: #3a2f5d; color: #b39ddb; }
+.badge-reentry { background: #5d4a2f; color: #f0c674; }
+.badge-unregistered { background: #5d2f2f; color: #f08a8a; }
+.badge-vacant { background: #2a2e42; color: var(--text-sub); }
+.badge-short { background: #2f4a5d; color: #7fd0e8; }
+.badge-stay { background: #2f5d3a; color: #8fdb9d; }
+.room-times { font-size: 11px; color: var(--text-sub); line-height: 1.5; }
+.room-saved { font-size: 12px; color: var(--green); font-weight: 700; margin-top: auto; }
+.room-saved .pay { color: var(--text-sub); font-weight: 500; }
+.room-empty-hint { font-size: 11px; color: var(--text-sub); margin-top: auto; }
+
+/* ── 사이드바 (노션 스타일) ── */
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; }
+.sidebar-overlay.open { display: block; }
+.sidebar { position: fixed; top: 0; right: -420px; width: 420px; max-width: 92vw; height: 100%; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; transition: right 0.2s ease; display: flex; flex-direction: column; }
+.sidebar.open { right: 0; }
+.sidebar-header { flex-shrink: 0; padding: 20px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.sidebar-title { font-size: 18px; font-weight: 800; }
+.sidebar-sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.sidebar-close { background: var(--surface2); border: none; color: var(--text); width: 30px; height: 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+.sidebar-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.sidebar-footer { flex-shrink: 0; padding: 14px 20px; border-top: 1px solid var(--border); }
+
+.detected-box { background: var(--surface2); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.7; }
+.detected-box b { color: var(--text); }
+
+.tx-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.tx-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.tx-label { font-size: 12px; font-weight: 700; color: var(--text-sub); }
+.tx-del { background: none; border: none; color: var(--red); font-size: 12px; cursor: pointer; }
+.field-row { margin-bottom: 10px; }
+.field-label { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
+.select-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 7px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface3); color: var(--text-sub); font-size: 13px; font-weight: 600; cursor: pointer; }
+.chip.selected { border-color: var(--accent); background: #1a1d40; color: #a5b4fc; }
+.price-chip { padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface3); color: var(--text-sub); font-size: 13px; font-weight: 700; cursor: pointer; }
+.price-chip.selected { border-color: var(--green); background: #16241a; color: var(--green); }
+.amt-input { width: 100%; background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 9px 10px; font-size: 14px; outline: none; margin-top: 6px; }
+.amt-input:focus { border-color: var(--accent); }
+.tx-total { font-size: 13px; font-weight: 700; color: var(--green); text-align: right; margin-top: 4px; }
+
+.add-tx-btn { width: 100%; padding: 12px; border: 1.5px dashed var(--border); border-radius: 10px; background: none; color: var(--text-sub); font-size: 13px; font-weight: 700; cursor: pointer; }
+.add-tx-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-sidebar-close { width: 100%; padding: 13px; background: var(--accent); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+/* ── 하단 저장바 ── */
+.save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; z-index: 50; }
+.save-status { font-size: 13px; color: var(--text-sub); }
+.save-status b { color: var(--orange); }
+.save-status.all-done b { color: var(--green); }
+.btn-save { padding: 13px 32px; background: var(--accent); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; }
+.btn-save:hover { filter: brightness(1.1); }
+
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; z-index: 200; transition: transform 0.25s; white-space: nowrap; border: 1px solid var(--border); pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.loading { grid-column: 1/-1; text-align: center; color: var(--text-sub); padding: 30px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <a class="back-link" href="index.html">← 객실현황</a>
+    <div class="header-title">숙박일지</div>
+  </div>
+  <div class="date-nav">
+    <button class="date-nav-btn" onclick="shiftDate(-1)">‹</button>
+    <div class="date-display" id="dateDisplay" onclick="document.getElementById('dateInput').showPicker && document.getElementById('dateInput').showPicker()">-</div>
+    <input class="date-input" type="date" id="dateInput" onchange="onDatePick(this.value)">
+    <button class="date-nav-btn" onclick="shiftDate(1)">›</button>
+    <button class="yesterday-btn" onclick="goYesterday()">어제</button>
+  </div>
+  <div class="progress-badge" id="progressBadge">불러오는 중...</div>
+</div>
+
+<div class="content" id="content">
+  <div class="loading">불러오는 중...</div>
+</div>
+
+<div class="save-bar">
+  <div class="save-status" id="saveStatus">불러오는 중...</div>
+  <button class="btn-save" onclick="submitLedger()">저장</button>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div>
+      <div class="sidebar-title" id="sidebarTitle">-</div>
+      <div class="sidebar-sub" id="sidebarSub"></div>
+    </div>
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+  </div>
+  <div class="sidebar-body" id="sidebarBody"></div>
+  <div class="sidebar-footer">
+    <button class="btn-sidebar-close" onclick="closeSidebar()">확인</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// 설정: 층별 자주쓰는 금액 프리셋 (실제 요금에 맞게 조정하세요)
+// ============================================================
+const FLOOR_PRESETS = {
+  '2': { '대실': [20000], '숙박': [30000, 35000, 40000] },
+  '3': { '대실': [30000], '숙박': [40000, 45000, 50000] },
+  '4': { '대실': [30000], '숙박': [40000, 45000, 50000] },
+  '5': { '대실': [30000], '숙박': [45000, 50000, 60000] }
+};
+const TYPE_OPTIONS = ['숙박', '대실', '공실', '장기'];
+const PAYMENT_OPTIONS = ['카드', '현금', '이체', '미수'];
+
+const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
+
+function fetchJsonp(url) {
+  return new Promise(function (resolve, reject) {
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    const script = document.createElement('script');
+    const timer = setTimeout(function () { cleanup(); reject(new Error('timeout')); }, 15000);
+    window[cb] = function (data) { cleanup(); resolve(data); };
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    script.onerror = function () { cleanup(); reject(new Error('network error')); };
+    script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function () { t.classList.remove('show'); }, 2200);
+}
+
+// ── 상태 ──
+let currentDate = '';      // yyyy-MM-dd
+let dayData = null;        // 서버에서 받은 원본 데이터 { date, rooms: [...] }
+let roomState = {};        // room -> { transactions: [{type,payment,base,extra}], roomData }
+let activeRoom = null;
+
+function fmtDateKr(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
+}
+
+function toDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function shiftDate(delta) {
+  const d = new Date(currentDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  loadDate(toDateStr(d));
+}
+
+function onDatePick(v) {
+  if (v) loadDate(v);
+}
+
+function goYesterday() {
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  loadDate(toDateStr(y));
+}
+
+async function loadDate(dateStr) {
+  currentDate = dateStr;
+  document.getElementById('dateDisplay').textContent = fmtDateKr(dateStr);
+  document.getElementById('dateInput').value = dateStr;
+  document.getElementById('content').innerHTML = '<div class="loading">불러오는 중...</div>';
+  document.getElementById('progressBadge').textContent = '불러오는 중...';
+  try {
+    dayData = await fetchJsonp(API + '?action=ledger_day_data&date=' + encodeURIComponent(dateStr));
+  } catch (e) {
+    document.getElementById('content').innerHTML = '<div class="loading">불러오기 실패 — 새로고침 해주세요</div>';
+    return;
+  }
+  buildRoomState();
+  renderAll();
+}
+
+function buildRoomState() {
+  roomState = {};
+  (dayData.rooms || []).forEach(function (r) {
+    const txs = [];
+    if (r.saved && r.saved.length) {
+      r.saved.forEach(function (s) {
+        txs.push({ type: s.type || '숙박', payment: s.payment || '', base: s.amount || 0, extra: 0 });
+      });
+    }
+    roomState[r.room] = { roomData: r, transactions: txs };
+  });
+}
+
+function autoLabel(r) {
+  if (r.isLong) return { cls: 'badge-long', text: '장기' + (r.longClient ? ' · ' + r.longClient : '') };
+  if (r.detected && r.detected.length) {
+    const types = r.detected.map(function (d) { return d.suggestedType; });
+    if (types.every(function (t) { return t === '대실'; })) return { cls: 'badge-short', text: types.length > 1 ? '대실 ' + types.length + '건' : '대실' };
+    return { cls: 'badge-stay', text: types.length > 1 ? '숙박 외 ' + (types.length - 1) + '건' : '숙박' };
+  }
+  if (r.isReentry) return { cls: 'badge-reentry', text: '재숙' + (r.reentryClient ? ' · ' + r.reentryClient : '') };
+  if (r.isUnregistered) return { cls: 'badge-unregistered', text: '짐있었음' };
+  return { cls: 'badge-vacant', text: '공실' };
+}
+
+function isRoomComplete(room) {
+  const st = roomState[room];
+  if (!st) return true;
+  const txs = st.transactions;
+  if (!txs.length) return st.roomData.isVacant; // 자동 공실이면 미입력이어도 완료 취급
+  for (let i = 0; i < txs.length; i++) {
+    const tx = txs[i];
+    if (!tx.type) return false;
+    if (tx.type === '공실') continue;
+    if (!tx.payment) return false;
+    if ((Number(tx.base) || 0) + (Number(tx.extra) || 0) <= 0) return false;
+  }
+  return true;
+}
+
+function isRoomRequired(room) {
+  return !roomState[room].roomData.isVacant;
+}
+
+function renderAll() {
+  renderRoomGrid();
+  renderProgress();
+}
+
+function renderRoomGrid() {
+  const rooms = (dayData.rooms || []).slice();
+  const floors = {};
+  rooms.forEach(function (r) {
+    if (!floors[r.floor]) floors[r.floor] = [];
+    floors[r.floor].push(r);
+  });
+  const floorKeys = Object.keys(floors).sort();
+  let html = '';
+  floorKeys.forEach(function (fk) {
+    html += '<div class="floor-section"><div class="floor-label">' + fk + '층</div><div class="room-grid">';
+    floors[fk].forEach(function (r) {
+      html += renderRoomCard(r);
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('content').innerHTML = html || '<div class="loading">객실 데이터가 없습니다</div>';
+}
+
+function renderRoomCard(r) {
+  const label = autoLabel(r);
+  const st = roomState[r.room];
+  const complete = isRoomComplete(r.room);
+  const required = isRoomRequired(r.room);
+  let cardCls = 'room-card';
+  if (complete && st.transactions.length) cardCls += ' complete';
+  else if (required && !complete) cardCls += ' incomplete-required';
+
+  let timesHtml = '';
+  if (!r.isLong && r.detected && r.detected.length) {
+    timesHtml = '<div class="room-times">' + r.detected.map(function (d) {
+      const ci = d.checkinTime.slice(11);
+      const co = d.checkoutTime ? d.checkoutTime.slice(11) : '진행중';
+      return d.suggestedType + ' ' + ci + '~' + co;
+    }).join('<br>') + '</div>';
+  }
+
+  let savedHtml = '';
+  if (st.transactions.length) {
+    const totalAmt = st.transactions.reduce(function (sum, tx) { return sum + (Number(tx.base) || 0) + (Number(tx.extra) || 0); }, 0);
+    const pays = st.transactions.map(function (tx) { return tx.payment; }).filter(Boolean);
+    savedHtml = '<div class="room-saved">₩' + totalAmt.toLocaleString() + (pays.length ? ' <span class="pay">· ' + pays.join(',') + '</span>' : '') + '</div>';
+  } else if (!required) {
+    savedHtml = '<div class="room-empty-hint">입력 불필요</div>';
+  } else {
+    savedHtml = '<div class="room-empty-hint">입력 필요</div>';
+  }
+
+  return '<div class="' + cardCls + '" onclick="openSidebar(\'' + r.room + '\')">' +
+    '<div class="room-top"><div class="room-num">' + r.room + '호</div><div class="room-badge ' + label.cls + '">' + label.text + '</div></div>' +
+    timesHtml + savedHtml +
+    '</div>';
+}
+
+function renderProgress() {
+  const rooms = dayData.rooms || [];
+  const required = rooms.filter(function (r) { return isRoomRequired(r.room); });
+  const done = required.filter(function (r) { return isRoomComplete(r.room); });
+  const badge = document.getElementById('progressBadge');
+  badge.innerHTML = '입력 <b>' + done.length + '</b> / ' + required.length + '개 객실';
+  const status = document.getElementById('saveStatus');
+  if (done.length === required.length) {
+    status.innerHTML = '<b>모든 객실 입력 완료</b>';
+    status.classList.add('all-done');
+  } else {
+    status.innerHTML = '공실 제외 <b>' + (required.length - done.length) + '개</b> 객실 입력 필요';
+    status.classList.remove('all-done');
+  }
+}
+
+// ── 사이드바 ──
+function openSidebar(room) {
+  activeRoom = room;
+  const r = roomState[room].roomData;
+  document.getElementById('sidebarTitle').textContent = room + '호';
+  document.getElementById('sidebarSub').textContent = fmtDateKr(currentDate);
+  renderSidebarBody();
+  document.getElementById('sidebarOverlay').classList.add('open');
+  document.getElementById('sidebar').classList.add('open');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.getElementById('sidebar').classList.remove('open');
+  activeRoom = null;
+  renderAll(); // 카드 상태 갱신
+}
+
+function renderSidebarBody() {
+  const room = activeRoom;
+  const st = roomState[room];
+  const r = st.roomData;
+  let html = '';
+
+  if (r.detected && r.detected.length) {
+    html += '<div class="detected-box"><b>RMS 감지 기록</b><br>' + r.detected.map(function (d) {
+      const ci = d.checkinTime.slice(11);
+      const co = d.checkoutTime ? d.checkoutTime.slice(11) : '진행중';
+      return '· ' + d.suggestedType + ' 추정 ' + ci + ' ~ ' + co;
+    }).join('<br>') + '</div>';
+  } else if (r.isReentry) {
+    html += '<div class="detected-box"><b>재숙(재입실후보) 감지</b>' + (r.reentryClient ? ' · ' + r.reentryClient : '') + '</div>';
+  } else if (r.isUnregistered) {
+    html += '<div class="detected-box"><b>짐있었음</b> — 입퇴실 기록은 없으나 어제 짐체크에서 짐이 확인됨</div>';
+  }
+
+  if (!st.transactions.length) {
+    st.transactions.push({ type: r.isLong ? '장기' : '숙박', payment: '', base: 0, extra: 0 });
+  }
+
+  html += '<div id="txList">';
+  st.transactions.forEach(function (tx, i) { html += renderTxBlock(tx, i); });
+  html += '</div>';
+  html += '<button class="add-tx-btn" onclick="addTx()">+ 거래 추가</button>';
+
+  document.getElementById('sidebarBody').innerHTML = html;
+}
+
+function renderTxBlock(tx, i) {
+  const floor = activeRoom.charAt(0);
+  const presets = (FLOOR_PRESETS[floor] && FLOOR_PRESETS[floor][tx.type]) || [];
+  const total = (Number(tx.base) || 0) + (Number(tx.extra) || 0);
+
+  let html = '<div class="tx-block">';
+  html += '<div class="tx-row-top"><span class="tx-label">거래 ' + (i + 1) + '</span>';
+  if (roomState[activeRoom].transactions.length > 1) {
+    html += '<button class="tx-del" onclick="delTx(' + i + ')">삭제</button>';
+  }
+  html += '</div>';
+
+  html += '<div class="field-row"><div class="field-label">유형</div><div class="select-chips">';
+  TYPE_OPTIONS.forEach(function (t) {
+    html += '<div class="chip' + (tx.type === t ? ' selected' : '') + '" onclick="setTxField(' + i + ',\'type\',\'' + t + '\')">' + t + '</div>';
+  });
+  html += '</div></div>';
+
+  if (tx.type !== '공실') {
+    html += '<div class="field-row"><div class="field-label">결제방법</div><div class="select-chips">';
+    PAYMENT_OPTIONS.forEach(function (p) {
+      html += '<div class="chip' + (tx.payment === p ? ' selected' : '') + '" onclick="setTxField(' + i + ',\'payment\',\'' + p + '\')">' + p + '</div>';
+    });
+    html += '</div></div>';
+
+    if (presets.length) {
+      html += '<div class="field-row"><div class="field-label">금액 (자주 쓰는 금액)</div><div class="select-chips">';
+      presets.forEach(function (amt) {
+        html += '<div class="price-chip' + (Number(tx.base) === amt ? ' selected' : '') + '" onclick="setTxAmount(' + i + ',' + amt + ')">₩' + amt.toLocaleString() + '</div>';
+      });
+      html += '</div>';
+      html += '<input class="amt-input" type="number" placeholder="직접 입력" value="' + (tx.base || '') + '" oninput="setTxField(' + i + ',\'base\',this.value)">';
+      html += '</div>';
+    } else {
+      html += '<div class="field-row"><div class="field-label">금액</div>';
+      html += '<input class="amt-input" type="number" placeholder="직접 입력" value="' + (tx.base || '') + '" oninput="setTxField(' + i + ',\'base\',this.value)">';
+      html += '</div>';
+    }
+
+    html += '<div class="field-row"><div class="field-label">추가인원 금액 (선택, 인원추가 발생시)</div>';
+    html += '<input class="amt-input" type="number" placeholder="추가 금액" value="' + (tx.extra || '') + '" oninput="setTxField(' + i + ',\'extra\',this.value)">';
+    html += '</div>';
+
+    html += '<div class="tx-total">합계 ₩' + total.toLocaleString() + '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function setTxField(i, field, value) {
+  const tx = roomState[activeRoom].transactions[i];
+  if (field === 'base' || field === 'extra') {
+    tx[field] = Number(value) || 0;
+  } else {
+    tx[field] = value;
+    if (field === 'type') {
+      // 유형이 바뀌면 프리셋 기준이 달라지므로 금액은 유지하되 화면만 다시 그림
+    }
+  }
+  renderSidebarBody();
+}
+
+function setTxAmount(i, amt) {
+  roomState[activeRoom].transactions[i].base = amt;
+  renderSidebarBody();
+}
+
+function addTx() {
+  roomState[activeRoom].transactions.push({ type: '숙박', payment: '', base: 0, extra: 0 });
+  renderSidebarBody();
+}
+
+function delTx(i) {
+  roomState[activeRoom].transactions.splice(i, 1);
+  renderSidebarBody();
+}
+
+// ── 저장 ──
+async function submitLedger() {
+  const incomplete = [];
+  (dayData.rooms || []).forEach(function (r) {
+    if (isRoomRequired(r.room) && !isRoomComplete(r.room)) incomplete.push(r.room);
+  });
+  if (incomplete.length) {
+    alert('아직 입력이 필요한 객실이 있습니다:\n' + incomplete.map(function (r) { return r + '호'; }).join(', '));
+    return;
+  }
+
+  const entries = [];
+  Object.keys(roomState).forEach(function (room) {
+    const st = roomState[room];
+    st.transactions.forEach(function (tx, i) {
+      if (!tx.type) return;
+      const amount = (Number(tx.base) || 0) + (Number(tx.extra) || 0);
+      if (tx.type === '공실' && amount <= 0 && !tx.payment) {
+        // 공실로 명시적으로 표시만 한 경우도 기록에 남김 (금액 0)
+      }
+      entries.push({ room: room, txIndex: i + 1, type: tx.type, payment: tx.payment, amount: amount });
+    });
+  });
+
+  // Apps Script 웹앱은 CORS 응답 헤더가 없어 fetch로 직접 JSON 응답을 읽을 수 없으므로
+  // (이 코드베이스의 다른 저장 요청들과 동일하게) no-cors로 fire-and-forget 전송 후,
+  // 잠시 뒤 GET(JSONP)로 다시 조회해서 저장이 반영됐는지 확인합니다.
+  try {
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=save_ledger&date=' + encodeURIComponent(currentDate) + '&entries=' + encodeURIComponent(JSON.stringify(entries))
+    });
+    showToast(currentDate + ' 숙박일지 저장 요청 완료');
+    setTimeout(function () { loadDate(currentDate); }, 1500);
+  } catch (e) {
+    showToast('저장 중 오류가 발생했습니다');
+  }
+}
+
+// ── 초기화 ──
+(function init() {
+  goYesterday();
+})();
+</script>
+</body>
+</html>
