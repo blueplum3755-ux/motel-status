@@ -37,7 +37,7 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .room-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; cursor: pointer; transition: border-color 0.15s; min-height: 100px; display: flex; flex-direction: column; gap: 6px; }
 .room-card:hover { border-color: var(--accent); }
 .room-card.complete { border-color: #2f5d3a; background: #16241a; }
-.room-card.incomplete-required { border-color: #5d3a2f; }
+.room-card.incomplete-required { border-color: var(--orange); box-shadow: 0 0 0 1px var(--orange) inset; }
 .room-top { display: flex; align-items: center; justify-content: space-between; }
 .room-num { font-size: 16px; font-weight: 800; }
 .room-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
@@ -49,8 +49,15 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .badge-stay { background: #2f5d3a; color: #8fdb9d; }
 .room-times { font-size: 11px; color: var(--text-sub); line-height: 1.5; }
 .room-saved { font-size: 12px; color: var(--green); font-weight: 700; margin-top: auto; }
-.room-saved .pay { color: var(--text-sub); font-weight: 500; }
+.room-pay-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.pay-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.pay-card { background: #2f4a5d; color: #7fd0e8; }
+.pay-cash { background: #2f5d3a; color: #8fdb9d; }
+.pay-transfer { background: #3a2f5d; color: #b39ddb; }
+.pay-unpaid { background: #5d2f2f; color: #f08a8a; }
+.room-long-client { font-size: 11px; color: #b39ddb; font-weight: 700; margin-top: 2px; }
 .room-empty-hint { font-size: 11px; color: var(--text-sub); margin-top: auto; }
+.room-empty-hint.hint-required { color: #ffb454; font-weight: 800; }
 
 /* ── 사이드바 (노션 스타일) ── */
 .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; }
@@ -244,7 +251,7 @@ function buildRoomState() {
 }
 
 function autoLabel(r) {
-  if (r.isLong) return { cls: 'badge-long', text: '장기' + (r.longClient ? ' · ' + r.longClient : '') };
+  if (r.isLong) return { cls: 'badge-long', text: '장기' };
   if (r.detected && r.detected.length) {
     const types = r.detected.map(function (d) { return d.suggestedType; });
     if (types.every(function (t) { return t === '대실'; })) return { cls: 'badge-short', text: types.length > 1 ? '대실 ' + types.length + '건' : '대실' };
@@ -271,7 +278,8 @@ function isRoomComplete(room) {
 }
 
 function isRoomRequired(room) {
-  return !roomState[room].roomData.isVacant;
+  const rd = roomState[room].roomData;
+  return !rd.isVacant && !rd.isLong;
 }
 
 function renderAll() {
@@ -316,20 +324,28 @@ function renderRoomCard(r) {
     }).join('<br>') + '</div>';
   }
 
+  const PAY_BADGE_CLASS = { '카드': 'pay-card', '현금': 'pay-cash', '이체': 'pay-transfer', '미수': 'pay-unpaid' };
   let savedHtml = '';
   if (st.transactions.length) {
     const totalAmt = st.transactions.reduce(function (sum, tx) { return sum + (Number(tx.base) || 0) + (Number(tx.extra) || 0); }, 0);
     const pays = st.transactions.map(function (tx) { return tx.payment; }).filter(Boolean);
-    savedHtml = '<div class="room-saved">₩' + totalAmt.toLocaleString() + (pays.length ? ' <span class="pay">· ' + pays.join(',') + '</span>' : '') + '</div>';
+    const paysHtml = pays.map(function (p) { return '<span class="pay-badge ' + (PAY_BADGE_CLASS[p] || 'pay-card') + '">' + p + '</span>'; }).join('');
+    savedHtml = '<div class="room-saved">₩' + totalAmt.toLocaleString() + '</div>' + (paysHtml ? '<div class="room-pay-badges">' + paysHtml + '</div>' : '');
   } else if (!required) {
     savedHtml = '<div class="room-empty-hint">입력 불필요</div>';
   } else {
-    savedHtml = '<div class="room-empty-hint">입력 필요</div>';
+    savedHtml = '<div class="room-empty-hint hint-required">입력 필요</div>';
+  }
+
+  // 장기 투숙 업체명은 호실 옆 배지 대신 금액(또는 입력상태) 아래에 별도로 표시 (긴 이름으로 인한 줄바뀜 방지)
+  let longClientHtml = '';
+  if (r.isLong && r.longClient) {
+    longClientHtml = '<div class="room-long-client">' + r.longClient + '</div>';
   }
 
   return '<div class="' + cardCls + '" onclick="openSidebar(\'' + r.room + '\')">' +
     '<div class="room-top"><div class="room-num">' + r.room + '호</div><div class="room-badge ' + label.cls + '">' + label.text + '</div></div>' +
-    timesHtml + savedHtml +
+    timesHtml + savedHtml + longClientHtml +
     '</div>';
 }
 
@@ -344,7 +360,7 @@ function renderProgress() {
     status.innerHTML = '<b>모든 객실 입력 완료</b>';
     status.classList.add('all-done');
   } else {
-    status.innerHTML = '공실 제외 <b>' + (required.length - done.length) + '개</b> 객실 입력 필요';
+    status.innerHTML = '공실·장기 제외 <b>' + (required.length - done.length) + '개</b> 객실 입력 필요';
     status.classList.remove('all-done');
   }
 }
