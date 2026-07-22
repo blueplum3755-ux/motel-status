@@ -257,6 +257,9 @@ table.lt-table tr.lt-row-expired td { opacity: 0.5; }
 .lt-input:focus { border-color: #fde047; }
 .lt-row2 { display: flex; gap: 8px; }
 .lt-row2 > * { flex: 1; }
+.lt-multi-price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.lt-multi-price-room { width: 44px; flex: none; font-size: 13px; font-weight: 800; color: #d97706; }
+.lt-multi-price-row .lt-input { font-size: 13px; padding: 8px 10px; }
 
 /* 객실 칩 */
 .lt-room-chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 110px; overflow-y: auto; }
@@ -488,7 +491,7 @@ table.lt-table tr.lt-row-expired td { opacity: 0.5; }
     </div>
   </div>
 
-  <div class="lt-section">
+  <div class="lt-section" id="ltSharedPriceSection">
     <div class="lt-sec-label">금액</div>
     <div class="lt-row2">
       <div>
@@ -500,6 +503,11 @@ table.lt-table tr.lt-row-expired td { opacity: 0.5; }
         <input class="lt-input" type="number" id="ltBasePrice" placeholder="예: 50000" inputmode="numeric" oninput="renderLtRefund()">
       </div>
     </div>
+  </div>
+
+  <div class="lt-section" id="ltMultiPriceSection" style="display:none">
+    <div class="lt-sec-label">객실별 금액 (원)</div>
+    <div id="ltMultiPriceRows"></div>
   </div>
 
   <div class="lt-section">
@@ -1379,6 +1387,7 @@ function renderLtModalFull() {
   document.getElementById('ltEndDate').value   = ltModal.endDate;
   document.getElementById('ltContractPrice').value = ltModal.contractPrice || '';
   document.getElementById('ltBasePrice').value     = ltModal.basePrice || '';
+  renderLtPriceSection();
   renderLtPayMethods();
   renderLtChecklist();
   document.getElementById('ltMemo').value = ltModal.memo || '';
@@ -1440,9 +1449,16 @@ function ltPickRoom(room) {
   // 신규 계약 등록 — 다중 선택 토글
   if (!ltModal.rooms) ltModal.rooms = [];
   var idx = ltModal.rooms.indexOf(room);
-  if (idx === -1) ltModal.rooms.push(room); else ltModal.rooms.splice(idx, 1);
+  if (idx === -1) {
+    ltModal.rooms.push(room);
+  } else {
+    ltModal.rooms.splice(idx, 1);
+    if (ltModal.roomPrices) delete ltModal.roomPrices[room]; // 선택 해제 시 입력값도 함께 제거
+  }
   updateLtModalTitle();
   renderLtRoomChips();
+  renderLtPriceSection();
+  renderLtRefund();
 }
 
 function renderLtClientChips() {
@@ -1483,12 +1499,61 @@ function renderLtChecklist() {
   document.getElementById('ltChecklist').innerHTML = html;
 }
 
+// 복수 객실 선택 시(신규 등록만), 공유 입력란 대신 객실마다 계약금액/기본단가를 따로 입력받습니다.
+// (환불금액은 객실별로 각각 계산되므로, 합계 금액을 넣으면 환불계산이 틀어짐 — 객실 1개당 금액을 입력)
+function renderLtPriceSection() {
+  var isEdit = !!ltModal.id;
+  var multi = !isEdit && ltModal.rooms && ltModal.rooms.length > 1;
+  document.getElementById('ltSharedPriceSection').style.display = multi ? 'none' : '';
+  document.getElementById('ltMultiPriceSection').style.display = multi ? '' : 'none';
+  if (!multi) return;
+
+  if (!ltModal.roomPrices) ltModal.roomPrices = {};
+  var sharedCp = parseInt(document.getElementById('ltContractPrice').value)||0;
+  var sharedBp = parseInt(document.getElementById('ltBasePrice').value)||0;
+  var rows = ltModal.rooms.map(function(room) {
+    if (!ltModal.roomPrices[room]) ltModal.roomPrices[room] = { contractPrice: sharedCp, basePrice: sharedBp };
+    var rp = ltModal.roomPrices[room];
+    return '<div class="lt-multi-price-row">'
+      + '<div class="lt-multi-price-room">'+room+'호</div>'
+      + '<input class="lt-input" type="number" placeholder="계약금액" inputmode="numeric" value="'+(rp.contractPrice||'')+'" oninput="ltSetRoomPrice(\''+room+'\',\'contractPrice\',this.value)">'
+      + '<input class="lt-input" type="number" placeholder="기본단가" inputmode="numeric" value="'+(rp.basePrice||'')+'" oninput="ltSetRoomPrice(\''+room+'\',\'basePrice\',this.value)">'
+      + '</div>';
+  }).join('');
+  document.getElementById('ltMultiPriceRows').innerHTML = rows;
+}
+
+function ltSetRoomPrice(room, field, val) {
+  if (!ltModal.roomPrices) ltModal.roomPrices = {};
+  if (!ltModal.roomPrices[room]) ltModal.roomPrices[room] = { contractPrice: 0, basePrice: 0 };
+  ltModal.roomPrices[room][field] = parseInt(val)||0;
+  renderLtRefund();
+}
+
 function renderLtRefund() {
+  var isEdit = !!ltModal.id;
+  var multi = !isEdit && ltModal.rooms && ltModal.rooms.length > 1;
+  var el = document.getElementById('ltRefundResult');
+  if (!ltModal.startDate) { el.textContent='기간을 입력하면 계산됩니다'; return; }
+  var days = Math.max(1, ltDayCount(ltModal.startDate));
+
+  if (multi) {
+    var rp = ltModal.roomPrices || {};
+    var lines = ltModal.rooms.map(function(room) {
+      var v = rp[room] || {};
+      var cp = v.contractPrice||0, bp = v.basePrice||0;
+      if (!cp||!bp) return room+'호: 금액을 입력하면 계산됩니다';
+      var charged = bp * days;
+      var refund = Math.max(0, cp - charged);
+      return room+'호: '+days+'박 × '+fmtLt(bp)+'원 = '+fmtLt(charged)+'원 → 환불 '+fmtLt(refund)+'원'+(refund===0?' (없음)':'');
+    });
+    el.textContent = lines.join('\n');
+    return;
+  }
+
   var cp = parseInt(document.getElementById('ltContractPrice').value)||0;
   var bp = parseInt(document.getElementById('ltBasePrice').value)||0;
-  var el = document.getElementById('ltRefundResult');
-  if (!cp||!bp||!ltModal.startDate) { el.textContent='계약금액과 기본단가를 입력하면 계산됩니다'; return; }
-  var days = Math.max(1, ltDayCount(ltModal.startDate));
+  if (!cp||!bp) { el.textContent='계약금액과 기본단가를 입력하면 계산됩니다'; return; }
   var charged = bp * days;
   var refund = Math.max(0, cp - charged);
   el.textContent = days+'박 × '+fmtLt(bp)+'원 = '+fmtLt(charged)+'원\n환불금액: '+fmtLt(refund)+'원'+(refund===0?' (환불 없음)':'');
@@ -1536,14 +1601,27 @@ function saveLtModal() {
     if (idx>=0) contracts[idx]=entry; else contracts.push(entry);
     savedLabel = entry.room+'호';
   } else {
-    // 신규 등록 — 선택된 객실 수만큼 각각 별개 계약으로 저장 (동일 고객/기간/금액 조건 공유)
+    // 신규 등록 — 선택된 객실 수만큼 각각 별개 계약으로 저장 (고객/기간/지급방법은 공유, 금액은 객실 2개 이상이면 객실별로 따로 입력받은 값 사용)
+    var isMulti = ltModal.rooms.length > 1;
+    if (isMulti) {
+      var missing = ltModal.rooms.filter(function(room) {
+        var rp = (ltModal.roomPrices && ltModal.roomPrices[room]) || {};
+        return !rp.contractPrice || !rp.basePrice;
+      });
+      if (missing.length) { showToast(missing.join(',')+'호 금액을 입력해주세요'); return; }
+    }
     var ts = Date.now();
     ltModal.rooms.forEach(function(room, i) {
+      var cp = contractPrice, bp = basePrice;
+      if (isMulti) {
+        var rp = ltModal.roomPrices[room];
+        cp = rp.contractPrice; bp = rp.basePrice;
+      }
       contracts.push({
         id: String(ts)+'_'+i,
         room: room, client: clientName,
         startDate: ltModal.startDate, endDate: ltModal.endDate,
-        contractPrice: contractPrice, basePrice: basePrice, payMethod: ltModal.payMethod,
+        contractPrice: cp, basePrice: bp, payMethod: ltModal.payMethod,
         taxInvoiceDone: ltModal.taxInvoiceDone, paymentDone: ltModal.paymentDone, memo: memoVal
       });
     });
