@@ -1345,7 +1345,7 @@ function openLtModal(id, preRoom) {
     var today = toDateStr(new Date());
     var endD = new Date(today); endD.setDate(endD.getDate()+29);
     ltModal = {
-      id: null, room: preRoom||'', client: clients.length===1 ? clientLabel(clients[0]) : '',
+      id: null, rooms: preRoom ? [preRoom] : [], client: clients.length===1 ? clientLabel(clients[0]) : '',
       customClient: '', startDate: today, endDate: toDateStr(endD),
       contractPrice: 0, basePrice: 0, payMethod: '현금선불',
       taxInvoiceDone: false, paymentDone: false, memo: ''
@@ -1361,9 +1361,17 @@ function closeLtModal() {
   document.getElementById('ltSheet').style.display   = 'none';
 }
 
+function updateLtModalTitle() {
+  var isEdit = !!ltModal.id;
+  var roomLabel = isEdit
+    ? (ltModal.room ? ltModal.room+'호 ' : '')
+    : ((ltModal.rooms && ltModal.rooms.length) ? ltModal.rooms.slice().sort(function(a,b){return parseInt(a,10)-parseInt(b,10);}).join(', ')+'호 ' : '');
+  document.getElementById('ltModalTitle').textContent = roomLabel + (isEdit ? '계약 수정' : '신규 장기계약 등록');
+}
+
 function renderLtModalFull() {
   var isEdit = !!ltModal.id;
-  document.getElementById('ltModalTitle').textContent = (ltModal.room||(isEdit?'':'신규')) + (ltModal.room?'호 ':'') + (isEdit?'계약 수정':'장기계약 등록');
+  updateLtModalTitle();
   document.getElementById('ltDeleteBtn').style.display = isEdit ? 'block' : 'none';
   renderLtRoomChips();
   renderLtClientChips();
