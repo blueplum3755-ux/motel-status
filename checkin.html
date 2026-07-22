@@ -1406,9 +1406,12 @@ function renderLtRoomChips() {
     allRooms = allRooms.filter(function(r) { return !takenRooms[r]; });
   }
 
-  var hint = ltModal.id ? '<div class="lt-room-move-hint">이동할 호실을 선택하세요 (기존 설정값은 그대로 유지됩니다) · <span style="cursor:pointer;text-decoration:underline" onclick="cancelLtRoomMove()">취소</span></div>' : '';
+  var hint = ltModal.id
+    ? '<div class="lt-room-move-hint">이동할 호실을 선택하세요 (기존 설정값은 그대로 유지됩니다) · <span style="cursor:pointer;text-decoration:underline" onclick="cancelLtRoomMove()">취소</span></div>'
+    : '<div class="lt-room-move-hint">여러 객실을 선택할 수 있습니다 (동일 조건으로 각 객실마다 계약이 각각 등록됩니다)</div>';
   el.innerHTML = hint + allRooms.map(function(r){
-    return '<div class="lt-room-chip'+(r===ltModal.room?' selected':'')+'" onclick="ltPickRoom(\''+r+'\')">'+r+'</div>';
+    var selected = ltModal.id ? (r===ltModal.room) : (ltModal.rooms||[]).indexOf(r) !== -1;
+    return '<div class="lt-room-chip'+(selected?' selected':'')+'" onclick="ltPickRoom(\''+r+'\')">'+r+'</div>';
   }).join('');
 }
 
@@ -1416,21 +1419,29 @@ function toggleLtRoomMove() { ltRoomMoving = true; renderLtRoomChips(); }
 function cancelLtRoomMove() { ltRoomMoving = false; renderLtRoomChips(); }
 
 function ltPickRoom(room) {
-  if (ltModal.id && room !== ltModal.room) {
-    var conflict = getLtContracts().find(function(c) {
-      return c.id !== ltModal.id && c.room === room &&
-        !(c.endDate < ltModal.startDate || c.startDate > ltModal.endDate);
-    });
-    if (conflict) {
-      var ok = confirm(room + '호에 이미 계약이 있습니다 (' + conflict.client + ', ' + conflict.startDate + '~' + conflict.endDate + ').\n그래도 이동하시겠습니까?');
-      if (!ok) return;
-    }
-  }
-  ltModal.room = room;
   if (ltModal.id) {
+    // 기존 계약 수정/이동 — 단일 선택
+    if (room !== ltModal.room) {
+      var conflict = getLtContracts().find(function(c) {
+        return c.id !== ltModal.id && c.room === room &&
+          !(c.endDate < ltModal.startDate || c.startDate > ltModal.endDate);
+      });
+      if (conflict) {
+        var ok = confirm(room + '호에 이미 계약이 있습니다 (' + conflict.client + ', ' + conflict.startDate + '~' + conflict.endDate + ').\n그래도 이동하시겠습니까?');
+        if (!ok) return;
+      }
+    }
+    ltModal.room = room;
     ltRoomMoving = false;
-    document.getElementById('ltModalTitle').textContent = ltModal.room + '호 계약 수정';
+    updateLtModalTitle();
+    renderLtRoomChips();
+    return;
   }
+  // 신규 계약 등록 — 다중 선택 토글
+  if (!ltModal.rooms) ltModal.rooms = [];
+  var idx = ltModal.rooms.indexOf(room);
+  if (idx === -1) ltModal.rooms.push(room); else ltModal.rooms.splice(idx, 1);
+  updateLtModalTitle();
   renderLtRoomChips();
 }
 
@@ -1498,32 +1509,50 @@ function saveLtModal() {
   var clientName = ltModal.client==='__custom__'
     ? (document.getElementById('ltCustomClient').value.trim()||'미지정')
     : ltModal.client;
-  if (!ltModal.room) { showToast('객실을 선택해주세요'); return; }
+  var isEdit = !!ltModal.id;
+  if (isEdit) {
+    if (!ltModal.room) { showToast('객실을 선택해주세요'); return; }
+  } else if (!ltModal.rooms || !ltModal.rooms.length) {
+    showToast('객실을 선택해주세요'); return;
+  }
   if (!clientName)   { showToast('고객을 선택해주세요'); return; }
   if (!ltModal.startDate||!ltModal.endDate) { showToast('날짜를 입력해주세요'); return; }
 
   var contracts = getLtContracts();
-  var entry = {
-    id: ltModal.id || String(Date.now()),
-    room: ltModal.room, client: clientName,
-    startDate: ltModal.startDate, endDate: ltModal.endDate,
-    contractPrice: parseInt(document.getElementById('ltContractPrice').value)||0,
-    basePrice: parseInt(document.getElementById('ltBasePrice').value)||0,
-    payMethod: ltModal.payMethod,
-    taxInvoiceDone: ltModal.taxInvoiceDone,
-    paymentDone: ltModal.paymentDone,
-    memo: document.getElementById('ltMemo').value.trim()
-  };
+  var contractPrice = parseInt(document.getElementById('ltContractPrice').value)||0;
+  var basePrice = parseInt(document.getElementById('ltBasePrice').value)||0;
+  var memoVal = document.getElementById('ltMemo').value.trim();
+  var savedLabel;
 
-  if (ltModal.id) {
+  if (isEdit) {
+    var entry = {
+      id: ltModal.id,
+      room: ltModal.room, client: clientName,
+      startDate: ltModal.startDate, endDate: ltModal.endDate,
+      contractPrice: contractPrice, basePrice: basePrice, payMethod: ltModal.payMethod,
+      taxInvoiceDone: ltModal.taxInvoiceDone, paymentDone: ltModal.paymentDone, memo: memoVal
+    };
     var idx = contracts.findIndex(function(c){ return c.id===ltModal.id; });
     if (idx>=0) contracts[idx]=entry; else contracts.push(entry);
+    savedLabel = entry.room+'호';
   } else {
-    contracts.push(entry);
+    // 신규 등록 — 선택된 객실 수만큼 각각 별개 계약으로 저장 (동일 고객/기간/금액 조건 공유)
+    var ts = Date.now();
+    ltModal.rooms.forEach(function(room, i) {
+      contracts.push({
+        id: String(ts)+'_'+i,
+        room: room, client: clientName,
+        startDate: ltModal.startDate, endDate: ltModal.endDate,
+        contractPrice: contractPrice, basePrice: basePrice, payMethod: ltModal.payMethod,
+        taxInvoiceDone: ltModal.taxInvoiceDone, paymentDone: ltModal.paymentDone, memo: memoVal
+      });
+    });
+    savedLabel = ltModal.rooms.length>1 ? (ltModal.rooms.join(',')+'호 ('+ltModal.rooms.length+'개)') : ltModal.rooms[0]+'호';
   }
+
   closeLtModal();
   renderLtGrid();
-  showToast(entry.room+'호 계약 저장됨');
+  showToast(savedLabel+' 계약 저장됨');
   ltSyncToServer(contracts);
 }
 
