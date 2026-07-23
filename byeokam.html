@@ -54,11 +54,11 @@
   .room-card{
     position:relative; aspect-ratio:1/1; border-radius:12px; border:2px solid var(--gray-border);
     background:var(--gray-bg); display:flex; flex-direction:column; align-items:center; justify-content:center;
-    min-height:64px; min-width:44px; cursor:pointer; touch-action:pan-y;
+    min-height:76px; min-width:44px; cursor:pointer; touch-action:pan-y; padding:4px;
     transition:background .12s, border-color .12s;
   }
-  .room-card .num{ font-size:14px; font-weight:800; color:#292524; }
-  .room-card .state{ font-size:10px; font-weight:700; color:var(--gray-text); margin-top:2px; }
+  .room-card .num{ font-size:15px; font-weight:800; color:#292524; }
+  .room-card .state{ font-size:14px; font-weight:800; color:var(--gray-text); margin-top:4px; line-height:1.2; text-align:center; }
   .room-card.checked{ background:var(--amber-bg); border-color:var(--amber-border); }
   .room-card.checked .num{ color:var(--amber-text); }
   .room-card.checked .state{ color:var(--amber-text); font-weight:800; }
@@ -186,7 +186,7 @@ const ALL_ROOMS = FLOORS.flatMap(f=>f.rooms);
 
 let priceMap = {};       // { "201": 40000, ... } 서버에서 조회한 객실별 기본가격
 let sessions = [];       // 저장된 날짜별 세션 전체
-let everUsedRooms = {};  // 과거 어느 날짜든 한 번이라도 체크된 적 있는 객실 집합 → "기존투숙" 뱃지용
+let yesterdayUsedRooms = {}; // 선택된 날짜의 "전날" 체크됐던 객실 집합 → "어제투숙" 뱃지용
 let rooms = {};          // 현재 선택된 날짜의 { 객실: 가격 } (체크 안 된 방은 값 없음)
 ALL_ROOMS.forEach(r => rooms[r] = 0);
 let dirty = false;
@@ -238,6 +238,12 @@ function fetchJsonp(url) {
   });
 }
 
+function dateStrMinusOneDay(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
 function applySessionToRoomsState(dateStr){
   ALL_ROOMS.forEach(r => rooms[r] = 0);
   const s = sessions.find(x=> x.id === dateStr);
@@ -245,13 +251,16 @@ function applySessionToRoomsState(dateStr){
     Object.keys(s.rooms).forEach(r=>{ if(ALL_ROOMS.includes(parseInt(r))) rooms[r] = s.rooms[r]; });
   }
   dirty = false;
+  recomputeYesterdayUsed(dateStr);
 }
 
-function recomputeEverUsed(){
-  everUsedRooms = {};
-  sessions.forEach(s=>{
-    Object.keys(s.rooms||{}).forEach(r=>{ if(s.rooms[r]) everUsedRooms[r] = true; });
-  });
+function recomputeYesterdayUsed(dateStr){
+  yesterdayUsedRooms = {};
+  const yKey = dateStrMinusOneDay(dateStr);
+  const ySession = sessions.find(x=> x.id === yKey);
+  if(ySession){
+    Object.keys(ySession.rooms||{}).forEach(r=>{ if(ySession.rooms[r]) yesterdayUsedRooms[r] = true; });
+  }
 }
 
 async function loadAll(){
@@ -265,7 +274,6 @@ async function loadAll(){
   if(sessRes.status === 'fulfilled') sessions = sessRes.value || [];
   else showToast('기록을 불러오지 못했습니다');
 
-  recomputeEverUsed();
   applySessionToRoomsState(selectedDate);
   dataReady = true;
   updateDateHeader();
@@ -291,9 +299,9 @@ function renderCheckScreen(){
     html += `<div class="floor-block"><div class="floor-title">${f.name}</div><div class="room-grid">`;
     f.rooms.forEach(r=>{
       const checked = rooms[r] > 0;
-      const prevUsed = !!everUsedRooms[r];
+      const wasUsedYesterday = !!yesterdayUsedRooms[r];
       html += `<div class="room-card ${checked?'checked':''}" data-room="${r}">
-        ${prevUsed ? '<div class="prev-badge">기존투숙</div>' : ''}
+        ${wasUsedYesterday ? '<div class="prev-badge">어제투숙</div>' : ''}
         <div class="num">${r}</div>
         <div class="state">${checked ? fmtAmount(rooms[r]) : '-'}</div>
       </div>`;
@@ -427,7 +435,7 @@ async function handleDeleteSession(dayKey){
         body: 'action=byeokam_delete&dayKey=' + encodeURIComponent(dayKey)
       });
       sessions = sessions.filter(s=> s.id !== dayKey);
-      recomputeEverUsed();
+      recomputeYesterdayUsed(selectedDate);
       if(openSessionId === dayKey) openSessionId = null;
       if(dayKey === selectedDate) applySessionToRoomsState(selectedDate);
       renderHistoryScreen();
@@ -481,7 +489,7 @@ async function doSave(){
     showToast('저장되었습니다');
     setTimeout(async ()=>{
       const res = await fetchJsonp(API + '?action=byeokam_sessions').catch(()=>null);
-      if(res){ sessions = res; recomputeEverUsed(); }
+      if(res){ sessions = res; recomputeYesterdayUsed(selectedDate); }
       render();
     }, 1200);
   }catch(e){
