@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>벽암산업 객실체크</title>
+<style>
+  :root{
+    --gray-bg:#ffffff; --gray-border:#cbd5e1; --gray-text:#374151;
+    --blue-bg:#dbeafe; --blue-border:#1d4ed8; --blue-text:#1d4ed8;
+    --accent:#7c3aed; --accent-dark:#5b21b6;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  body{
+    margin:0; font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background:#f1f5f9; color:#1e293b; user-select:none;
+  }
+  #app{ max-width:480px; margin:0 auto; min-height:100vh; min-height:100dvh; background:#f8fafc; display:flex; flex-direction:column; }
+
+  header{
+    position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid #e2e8f0;
+    padding:14px 16px; display:flex; justify-content:space-between; align-items:center;
+  }
+  header .date{ font-size:17px; font-weight:700; color:#0f172a; }
+  header .date .sub{ font-size:13px; color:#64748b; font-weight:500; margin-top:2px; }
+  header .back{ font-size:13px; color:#64748b; text-decoration:none; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; }
+
+  main{ flex:1; padding:14px; padding-bottom:90px; }
+
+  .floor-block{ margin-bottom:20px; }
+  .floor-title{ font-size:15px; font-weight:800; color:#475569; margin:0 0 10px 4px; }
+
+  .room-grid{
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;
+  }
+  .room-card{
+    aspect-ratio:1/1; border-radius:12px; border:2px solid var(--gray-border);
+    background:var(--gray-bg); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:60px; min-width:44px; cursor:pointer; touch-action:pan-y;
+    transition:background .12s, border-color .12s;
+  }
+  .room-card .num{ font-size:14px; font-weight:800; color:#0f172a; }
+  .room-card .state{ font-size:11px; font-weight:700; color:var(--gray-text); margin-top:2px; }
+  .room-card.open{ background:var(--blue-bg); border-color:var(--blue-border); }
+  .room-card.open .num{ color:var(--blue-text); }
+  .room-card.open .state{ color:var(--blue-text); }
+  .room-card.readonly{ cursor:default; }
+
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
+    display:flex; background:#fff; border-top:1px solid #e2e8f0; z-index:20;
+    transform:translateZ(0); -webkit-transform:translateZ(0);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.tabbar button{
+    flex:1; border:none; background:none; padding:12px 4px 14px; font-size:13px; font-weight:700;
+    color:#94a3b8; min-height:60px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  nav.tabbar button.active{ color:var(--accent); }
+  nav.tabbar button .icon{ font-size:20px; }
+
+  .summary-bar{
+    background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:16px;
+    display:flex; justify-content:space-around; text-align:center;
+  }
+  .summary-bar .item .n{ font-size:20px; font-weight:800; color:#0f172a; }
+  .summary-bar .item.accent .n{ color:var(--accent-dark); }
+  .summary-bar .item .l{ font-size:12px; color:#64748b; margin-top:2px; font-weight:600;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:100;
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{ background:#fff; border-radius:16px; padding:24px; width:100%; max-width:340px; text-align:center; }
+  .modal-box h2{ font-size:17px; margin:0 0 6px; color:#0f172a; }
+  .modal-box .sub{ font-size:13px; color:#64748b; margin-bottom:16px; }
+  .modal-input-label{ font-size:12px; color:#64748b; text-align:left; margin:0 0 6px; font-weight:600; }
+  .modal-input{
+    width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; font-size:16px;
+    outline:none; margin-bottom:14px; text-align:right;
+  }
+  .modal-input:focus{ border-color:var(--accent); }
+  .modal-btn-row{ display:flex; gap:10px; margin-top:6px; }
+  .modal-btn{ flex:1; border:none; border-radius:12px; min-height:52px; font-size:16px; font-weight:800; cursor:pointer; }
+  .modal-btn.cancel{ background:#f1f5f9; color:#475569; }
+  .modal-btn.cancel:active{ background:#e2e8f0; }
+  .modal-btn.confirm{ background:var(--accent-dark); color:#fff; }
+  .modal-btn.confirm:active{ background:#4c1d95; }
+  .modal-btn.confirm.checkout{ background:#0f766e; }
+  .modal-btn.confirm.checkout:active{ background:#0d5f59; }
+  .modal-btn.confirm[disabled]{ opacity:.6; }
+  .modal-open-info{ background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:10px 12px; font-size:13px; color:#0369a1; margin-bottom:14px; text-align:left; }
+
+  .day-group{ margin-bottom:18px; }
+  .day-head{
+    display:flex; justify-content:space-between; align-items:center; margin:0 2px 8px;
+  }
+  .day-head .t{ font-size:14px; font-weight:800; color:#334155; }
+  .day-head .amt{ font-size:13px; font-weight:800; color:var(--accent-dark); }
+  .log-item{
+    background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .log-item .left .room{ font-size:14px; font-weight:800; color:#0f172a; }
+  .log-item .left .meta{ font-size:12px; color:#64748b; margin-top:2px; }
+  .log-item .status-badge{ font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; margin-right:6px; }
+  .log-item .status-badge.in{ background:var(--blue-bg); color:var(--blue-text); }
+  .log-item .status-badge.out{ background:#f1f5f9; color:#64748b; }
+  .log-item .right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .log-item .amount{ font-size:13px; font-weight:700; color:#334155; }
+  .delete-btn{
+    background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:8px;
+    font-size:12px; font-weight:700; padding:6px 10px; min-height:32px; cursor:pointer;
+  }
+  .delete-btn:active{ background:#fee2e2; }
+  .empty-msg{ text-align:center; color:#94a3b8; padding:60px 20px; font-size:14px; line-height:1.6; }
+
+  .toast{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0f172a; color:#fff;
+    padding:14px 22px; border-radius:12px; font-size:14px; font-weight:600; z-index:50; opacity:0; transition:opacity .2s;
+    max-width:300px; text-align:center; pointer-events:none;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="date">
+      <div id="todayDate">-</div>
+      <div class="sub">벽암산업 전용 입/퇴실 체크</div>
+    </div>
+    <a class="back" href="index.html">← 현황</a>
+  </header>
+
+  <main id="main"></main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="check"><span class="icon">🏠</span>객실체크</button>
+    <button class="tab-btn" data-tab="history"><span class="icon">📋</span>기록보기</button>
+  </nav>
+</div>
+<div class="modal-overlay" id="actionModal">
+  <div class="modal-box" id="actionModalContent"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbywu4tvvqEaNXNnRr65W8Fq9gFdMXv3--xPnEoDjTv02I_49sT_VrW00-VE13PEyW0p/exec';
+
+const FLOORS = [
+  { name: '2층', rooms: Array.from({length:13}, (_,i)=>201+i) },
+  { name: '3층', rooms: Array.from({length:10}, (_,i)=>301+i) },
+  { name: '5층', rooms: Array.from({length:10}, (_,i)=>501+i) },
+];
+const ALL_ROOMS = FLOORS.flatMap(f=>f.rooms);
+
+let logs = [];
+let openByRoom = {};
+let currentTab = 'check';
+let dataReady = false;
+
+const mainEl = document.getElementById('main');
+const toastEl = document.getElementById('toast');
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), 1800);
+}
+
+function fmtDateHeader(d){
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+function fmtAmount(n){ return (n||0).toLocaleString('ko-KR')+'원'; }
+function fmtTime(tsStr){
+  if(!tsStr) return '-';
+  const t = tsStr.split(' ')[1] || '';
+  return t.slice(0,5);
+}
+function fmtDayLabel(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}월 ${d.getDate()}일(${days[d.getDay()]})`;
+}
+
+document.getElementById('todayDate').textContent = fmtDateHeader(new Date());
+
+/* ── JSONP 유틸 (다른 앱과 동일한 방식) ─────────── */
+function fetchJsonp(url) {
+  return new Promise(function(resolve, reject) {
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    const script = document.createElement('script');
+    const timer = setTimeout(function() { cleanup(); reject(new Error('timeout')); }, 12000);
+    window[cb] = function(data) { cleanup(); resolve(data); };
+    function cleanup() {
+      clearTimeout(timer); delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    script.onerror = function() { cleanup(); reject(new Error('network error')); };
+    script.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
+async function loadData(){
+  try{
+    const res = await fetchJsonp(API + '?action=byeokam_data');
+    logs = (res && res.logs) || [];
+    openByRoom = (res && res.open) || {};
+  }catch(e){
+    console.error(e);
+    showToast('데이터를 불러오지 못했습니다');
+  }
+  dataReady = true;
+  render();
+}
+
+function attachTapHandler(el, onTap){
+  let startX=0, startY=0, tracking=false;
+  const THRESHOLD = 10;
+  el.addEventListener('pointerdown', (e)=>{ startX=e.clientX; startY=e.clientY; tracking=true; });
+  el.addEventListener('pointerup', (e)=>{
+    if(!tracking) return;
+    tracking = false;
+    const dist = Math.sqrt((e.clientX-startX)**2 + (e.clientY-startY)**2);
+    if(dist < THRESHOLD) onTap();
+  });
+  el.addEventListener('pointercancel', ()=>{ tracking = false; });
+}
+
+function renderCheckScreen(){
+  let html = '';
+  FLOORS.forEach(f=>{
+    html += `<div class="floor-block"><div class="floor-title">${f.name}</div><div class="room-grid">`;
+    f.rooms.forEach(r=>{
+      const open = openByRoom[String(r)];
+      html += `<div class="room-card ${open?'open':''}" data-room="${r}">
+        <div class="num">${r}</div>
+        <div class="state">${open ? '입실중' : '-'}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  mainEl.innerHTML = html;
+  mainEl.querySelectorAll('.room-card').forEach(card=>{
+    attachTapHandler(card, ()=> openActionModal(card.dataset.room));
+  });
+}
+
+function openActionModal(room){
+  const open = openByRoom[String(room)];
+  const box = document.getElementById('actionModalContent');
+  if(open){
+    box.innerHTML = `
+      <h2>${room}호</h2>
+      <div class="sub">퇴실을 기록할까요?</div>
+      <div class="modal-open-info">입실 ${fmtTime(open.tsStr)} · ${fmtAmount(open.amount)}</div>
+      <div class="modal-input-label">추가/정정 금액 (원, 없으면 비워두세요)</div>
+      <input class="modal-input" type="number" id="actionAmount" inputmode="numeric" placeholder="0">
+      <div class="modal-btn-row">
+        <button class="modal-btn cancel" id="modalCancelBtn">취소</button>
+        <button class="modal-btn confirm checkout" id="modalConfirmBtn">퇴실 기록</button>
+      </div>
+    `;
+    bindActionModal(room, '퇴실');
+  }else{
+    box.innerHTML = `
+      <h2>${room}호</h2>
+      <div class="sub">입실을 기록할까요?</div>
+      <div class="modal-input-label">금액 (원)</div>
+      <input class="modal-input" type="number" id="actionAmount" inputmode="numeric" placeholder="예: 30000">
+      <div class="modal-btn-row">
+        <button class="modal-btn cancel" id="modalCancelBtn">취소</button>
+        <button class="modal-btn confirm" id="modalConfirmBtn">입실 기록</button>
+      </div>
+    `;
+    bindActionModal(room, '입실');
+  }
+  document.getElementById('actionModal').classList.add('open');
+}
+
+function bindActionModal(room, status){
+  document.getElementById('modalCancelBtn').addEventListener('click', closeActionModal);
+  document.getElementById('modalConfirmBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('modalConfirmBtn');
+    const amount = parseInt(document.getElementById('actionAmount').value) || 0;
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    await doLog(room, status, amount);
+    closeActionModal();
+  });
+}
+
+function closeActionModal(){
+  document.getElementById('actionModal').classList.remove('open');
+}
+
+async function doLog(room, status, amount){
+  try{
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=byeokam_log&room=' + encodeURIComponent(room) + '&status=' + encodeURIComponent(status) + '&amount=' + encodeURIComponent(amount)
+    });
+    showToast(room + '호 ' + status + ' 기록되었습니다');
+    setTimeout(loadData, 1200);
+  }catch(e){
+    console.error(e);
+    showToast('저장에 실패했습니다. 다시 시도해주세요');
+  }
+}
+
+function renderHistoryScreen(){
+  if(logs.length === 0){
+    mainEl.innerHTML = `<div class="empty-msg">아직 기록이 없습니다.<br>객실체크 탭에서 입실/퇴실을 기록해보세요.</div>`;
+    return;
+  }
+  const now = new Date();
+  const monthKey = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const monthTotal = logs.filter(l=> l.date.slice(0,7) === monthKey).reduce((s,l)=> s+(l.amount||0), 0);
+
+  const groups = {};
+  const order = [];
+  logs.forEach(l=>{
+    if(!groups[l.date]){ groups[l.date] = []; order.push(l.date); }
+    groups[l.date].push(l);
+  });
+
+  let html = `<div class="summary-bar">
+    <div class="item accent"><div class="n">${fmtAmount(monthTotal)}</div><div class="l">이번달 합계</div></div>
+    <div class="item"><div class="n">${logs.length}</div><div class="l">전체 기록</div></div>
+  </div>`;
+
+  order.forEach(dateStr=>{
+    const items = groups[dateStr];
+    const dayTotal = items.reduce((s,l)=> s+(l.amount||0), 0);
+    html += `<div class="day-group"><div class="day-head"><div class="t">${fmtDayLabel(dateStr)}</div><div class="amt">${fmtAmount(dayTotal)}</div></div>`;
+    items.forEach(l=>{
+      html += `<div class="log-item">
+        <div class="left">
+          <div class="room"><span class="status-badge ${l.status==='입실'?'in':'out'}">${l.status}</span>${l.room}호</div>
+          <div class="meta">${fmtTime(l.tsStr)}${l.amount ? ' · '+fmtAmount(l.amount) : ''}</div>
+        </div>
+        <div class="right">
+          <button class="delete-btn" data-id="${l.id}">삭제</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  mainEl.innerHTML = html;
+  mainEl.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> handleDeleteLog(btn.dataset.id));
+  });
+}
+
+async function handleDeleteLog(id){
+  try{
+    await fetch(API, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=byeokam_delete&id=' + encodeURIComponent(id)
+    });
+    logs = logs.filter(l=> l.id !== id);
+    renderHistoryScreen();
+    showToast('삭제되었습니다');
+  }catch(e){
+    console.error(e);
+    showToast('삭제에 실패했습니다');
+  }
+}
+
+function render(){
+  if(!dataReady){
+    mainEl.innerHTML = `<div class="empty-msg">불러오는 중...</div>`;
+    return;
+  }
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(b=> b.classList.toggle('active', b.dataset.tab === currentTab));
+  if(currentTab === 'check') renderCheckScreen();
+  else if(currentTab === 'history') renderHistoryScreen();
+}
+
+document.querySelectorAll('.tab-btn[data-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentTab = btn.dataset.tab;
+    render();
+  });
+});
+
+// 접속 직후 하단 고정 탭바가 눌리지 않는 iOS Safari 이슈 방지용
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    window.scrollTo(0, 1);
+    window.scrollTo(0, 0);
+  }, 100);
+});
+
+loadData();
+</script>
+</body>
+</html>
