@@ -66,6 +66,10 @@
     position:absolute; top:-6px; right:-4px; background:#57534e; color:#fff; font-size:9px; font-weight:800;
     padding:2px 5px; border-radius:6px; line-height:1.3;
   }
+  .room-card .luggage-badge{
+    position:absolute; top:-6px; left:-4px; background:#fee2e2; color:#b91c1c; font-size:9px; font-weight:800;
+    padding:2px 5px; border-radius:6px; line-height:1.3; border:1px solid #fecaca;
+  }
   .room-card.readonly{ cursor:default; }
 
   nav.tabbar{
@@ -108,6 +112,16 @@
     width:100%; border:1px solid #fecaca; background:#fef2f2; color:#b91c1c; border-radius:10px;
     padding:10px; font-size:13px; font-weight:700; cursor:pointer; margin-bottom:8px;
   }
+  .manual-price-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .manual-price-row input{
+    flex:1; border:2px solid #e7e5e4; border-radius:10px; padding:12px; font-size:15px; text-align:right;
+    outline:none;
+  }
+  .manual-price-row input:focus{ border-color:var(--accent); }
+  .manual-price-row button{
+    border:none; background:#57534e; color:#fff; border-radius:10px; padding:0 16px; font-size:14px; font-weight:800; cursor:pointer;
+  }
+  .manual-price-label{ font-size:12px; color:#78716c; text-align:left; margin:0 0 6px; font-weight:600; }
   .modal-btn-row{ display:flex; gap:10px; margin-top:6px; }
   .modal-btn{ flex:1; border:none; border-radius:12px; min-height:52px; font-size:16px; font-weight:800; cursor:pointer; }
   .modal-btn.cancel{ background:#f5f5f4; color:#57534e; }
@@ -187,6 +201,7 @@ const ALL_ROOMS = FLOORS.flatMap(f=>f.rooms);
 let priceMap = {};       // { "201": 40000, ... } 서버에서 조회한 객실별 기본가격
 let sessions = [];       // 저장된 날짜별 세션 전체
 let yesterdayUsedRooms = {}; // 선택된 날짜의 "전날" 체크됐던 객실 집합 → "어제투숙" 뱃지용
+let luggageByRoom = {};  // 짐체크 앱의 가장 최근 체크 결과 { "201": {status:'짐있음'|'공실', checkedAt} } → "짐있음" 뱃지용
 let rooms = {};          // 현재 선택된 날짜의 { 객실: 가격 } (체크 안 된 방은 값 없음)
 ALL_ROOMS.forEach(r => rooms[r] = 0);
 let dirty = false;
@@ -264,15 +279,19 @@ function recomputeYesterdayUsed(dateStr){
 }
 
 async function loadAll(){
-  const [priceRes, sessRes] = await Promise.allSettled([
+  const [priceRes, sessRes, luggageRes] = await Promise.allSettled([
     fetchJsonp(API + '?action=byeokam_prices'),
-    fetchJsonp(API + '?action=byeokam_sessions')
+    fetchJsonp(API + '?action=byeokam_sessions'),
+    fetchJsonp(API + '?action=byeokam_luggage')
   ]);
   if(priceRes.status === 'fulfilled') priceMap = priceRes.value || {};
   else showToast('가격 정보를 불러오지 못했습니다');
 
   if(sessRes.status === 'fulfilled') sessions = sessRes.value || [];
   else showToast('기록을 불러오지 못했습니다');
+
+  if(luggageRes.status === 'fulfilled') luggageByRoom = luggageRes.value || {};
+  // 짐체크 정보는 참고용 뱃지라 실패해도 별도 토스트 없이 조용히 넘어감
 
   applySessionToRoomsState(selectedDate);
   dataReady = true;
@@ -300,7 +319,9 @@ function renderCheckScreen(){
     f.rooms.forEach(r=>{
       const checked = rooms[r] > 0;
       const wasUsedYesterday = !!yesterdayUsedRooms[r];
+      const hasLuggage = luggageByRoom[r] && luggageByRoom[r].status === '짐있음';
       html += `<div class="room-card ${checked?'checked':''}" data-room="${r}">
+        ${hasLuggage ? '<div class="luggage-badge">짐있음</div>' : ''}
         ${wasUsedYesterday ? '<div class="prev-badge">어제투숙</div>' : ''}
         <div class="num">${r}</div>
         <div class="state">${checked ? fmtAmount(rooms[r]) : '-'}</div>
@@ -325,6 +346,11 @@ function openActionModal(room){
     <h2>${room}호</h2>
     <div class="sub">벽암산업 고객 입실을 기록할까요?</div>
     <div class="price-btn-col">${priceBtnsHtml}</div>
+    <div class="manual-price-label">직접입력 (원)</div>
+    <div class="manual-price-row">
+      <input type="number" id="manualPriceInput" inputmode="numeric" placeholder="예: 47000" value="${current||''}">
+      <button id="manualPriceBtn">적용</button>
+    </div>
     ${current ? '<button class="unmark-btn" id="unmarkBtn">이 객실 체크 해제</button>' : ''}
     <div class="modal-btn-row">
       <button class="modal-btn cancel" id="modalCancelBtn">취소</button>
@@ -338,6 +364,14 @@ function openActionModal(room){
       closeActionModal();
       renderCheckScreen();
     });
+  });
+  document.getElementById('manualPriceBtn').addEventListener('click', ()=>{
+    const val = parseInt(document.getElementById('manualPriceInput').value) || 0;
+    if(val <= 0){ showToast('금액을 입력해주세요'); return; }
+    rooms[room] = val;
+    dirty = true;
+    closeActionModal();
+    renderCheckScreen();
   });
   const unmarkBtn = document.getElementById('unmarkBtn');
   if(unmarkBtn){
